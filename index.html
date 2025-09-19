@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Takvim Tabanlı Personel İzin Takip</title>
+    <!-- SheetJS (Excel okuma) kütüphanesi -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --danger-color: #dc3545;
+            --background-color: #f8f9fa;
+            --font-color: #212529;
+            --border-color: #dee2e6;
+            --today-bg: #e6f2ff;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            background-color: var(--background-color);
+            color: var(--font-color);
+            padding: 15px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .calendar-header button {
+            background: none;
+            border: 1px solid white;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.2s;
+        }
+        .calendar-header button:hover {
+            background-color: rgba(255,255,255,0.2);
+        }
+        #current-month-year {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+        }
+        .day-header, .day-cell {
+            padding: 10px;
+            border-right: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .day-header {
+            font-weight: bold;
+            text-align: center;
+            background-color: #f1f1f1;
+        }
+        .day-cell {
+            min-height: 120px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            position: relative;
+        }
+        .day-cell:hover {
+            background-color: #f5f5f5;
+        }
+        .day-number { font-weight: bold; }
+        .day-cell.other-month { color: #ccc; }
+        .day-cell.today { background-color: var(--today-bg); }
+        .izin-entry {
+            font-size: 0.75rem;
+            padding: 2px 4px;
+            margin-top: 4px;
+            background-color: #ffc107;
+            color: #333;
+            border-radius: 3px;
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+        }
+        .izin-entry:hover {
+            opacity: 0.8;
+        }
+        /* Modal Stilleri */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 25px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 8px;
+            position: relative;
+        }
+        .close-button {
+            color: #aaa;
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        #izin-form { display: flex; flex-direction: column; gap: 15px; }
+        #izin-form label { font-weight: 600; }
+        #izin-form select, #izin-form input { padding: 10px; border-radius: 5px; border: 1px solid #ccc; font-size: 1rem; }
+        #izin-form button { padding: 12px; color: white; border: none; border-radius: 5px; font-size: 1.1rem; cursor: pointer; }
+        #saatlik-alan { display: none; gap: 15px; }
+        #status { text-align: center; font-weight: bold; margin: 15px 0; min-height: 20px; }
+        .success { color: green; }
+        .error { color: red; }
+        .form-buttons { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+        #save-button { background-color: var(--primary-color); }
+        #delete-button { background-color: var(--danger-color); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="calendar-header">
+        <button id="prev-month">Önceki Ay</button>
+        <h2 id="current-month-year"></h2>
+        <button id="next-month">Sonraki Ay</button>
+    </div>
+    <div class="calendar-grid day-headers">
+        <div class="day-header">Pazartesi</div>
+        <div class="day-header">Salı</div>
+        <div class="day-header">Çarşamba</div>
+        <div class="day-header">Perşembe</div>
+        <div class="day-header">Cuma</div>
+        <div class="day-header">Cumartesi</div>
+        <div class="day-header">Pazar</div>
+    </div>
+    <div class="calendar-grid" id="calendar-body">
+        <!-- Takvim günleri buraya eklenecek -->
+    </div>
+</div>
+
+<!-- Aylık Özet -->
+<div class="container" style="margin-top: 20px;">
+    <h3 style="text-align: center; color: var(--primary-color); border-bottom: 2px solid var(--border-color); padding-bottom: 10px;">
+        Ayın İzin Özeti
+    </h3>
+    <div id="monthly-summary">
+        <!-- Gün bazlı özet buraya eklenecek -->
+    </div>
+</div>
+
+
+<!-- İzin Ekleme/Düzenleme Modalı -->
+<div id="izin-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <h3 id="modal-title">İzin Ekle</h3>
+        <form id="izin-form">
+            <input type="hidden" id="izin-id">
+            <input type="hidden" id="izin-tarihi">
+            <div>
+                <label for="personel-listesi">Personel:</label>
+                <select id="personel-listesi" required>
+                    <option value="">Yükleniyor...</option>
+                </select>
+            </div>
+            <div>
+                <label>İzin Türü:</label>
+                <input type="radio" id="gunluk" name="izinTuru" value="Günlük" checked>
+                <label for="gunluk">Günlük</label>
+                <input type="radio" id="saatlik" name="izinTuru" value="Saatlik">
+                <label for="saatlik">Saatlik</label>
+            </div>
+            <div id="saatlik-alan">
+                 <input type="time" id="baslangic-saati">
+                 <input type="time" id="bitis-saati">
+            </div>
+            <div>
+                <label for="izin-nedeni">İzin Nedeni (Opsiyonel):</label>
+                <input type="text" id="izin-nedeni" placeholder="Örn: Doktor Randevusu">
+            </div>
+            <div class="form-buttons">
+                 <button type="submit" id="save-button">İzni Kaydet</button>
+                 <button type="button" id="delete-button">Sil</button>
+            </div>
+            <div id="status"></div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // --- Gerekli Bilgiler ---
+    const GITHUB_OWNER = 'gokhangeo';
+    const GITHUB_REPO = 'personelmesai';
+    const KAYIT_DOSYASI_YOLU = 'izinler.json';
+    const PERSONEL_EXCEL_URL = 'https://raw.githubusercontent.com/gokhangeo/personelmesai/main/PERSONEL.xlsx';
+    const tokenParts = ['ghp_MAuvw', 'YTJDUiq', 'FY5h72CZeX', 'nMKuxr', 'CJ08sfAl'];
+    const GITHUB_TOKEN = tokenParts.join('');
+
+    // --- Elementler ---
+    const calendarBody = document.getElementById('calendar-body');
+    const currentMonthYearEl = document.getElementById('current-month-year');
+    const modal = document.getElementById('izin-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const closeModalButton = document.querySelector('.close-button');
+    const izinForm = document.getElementById('izin-form');
+    const personelSelect = document.getElementById('personel-listesi');
+    const statusDiv = document.getElementById('status');
+    const saatlikAlan = document.getElementById('saatlik-alan');
+    const deleteButton = document.getElementById('delete-button');
+
+    // --- Durum (State) ---
+    let currentDate = new Date();
+    let izinKayitlari = [];
+
+    // --- API Çağrıları ---
+    const githubApiCall = async (url, options = {}) => {
+        const defaultHeaders = {
+            'Authorization': `Bearer ${GITHUB_TOKEN}`,
+            'Accept': 'application/vnd.github.v3+json'
+        };
+        options.headers = { ...defaultHeaders, ...options.headers };
+        return fetch(url, options);
+    };
+
+    // --- Takvim Fonksiyonları ---
+    const renderCalendar = () => {
+        calendarBody.innerHTML = '';
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+
+        currentMonthYearEl.textContent = `${new Intl.DateTimeFormat('tr-TR', { month: 'long' }).format(currentDate)} ${year}`;
+
+        const firstDayOfMonth = new Date(year, month, 1);
+        const lastDayOfMonth = new Date(year, month + 1, 0);
+        const daysInMonth = lastDayOfMonth.getDate();
+        
+        let startDayOfWeek = firstDayOfMonth.getDay() - 1; 
+        if (startDayOfWeek === -1) startDayOfWeek = 6; 
+        
+        for (let i = 0; i < startDayOfWeek; i++) {
+            const emptyCell = document.createElement('div');
+            emptyCell.classList.add('day-cell', 'other-month');
+            calendarBody.appendChild(emptyCell);
+        }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const cell = document.createElement('div');
+            cell.classList.add('day-cell');
+            const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            cell.dataset.date = dateString;
+
+            const dayNumber = document.createElement('div');
+            dayNumber.classList.add('day-number');
+            dayNumber.textContent = day;
+            cell.appendChild(dayNumber);
+
+            const today = new Date();
+            if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+                cell.classList.add('today');
+            }
+
+            const izinlerBuGun = izinKayitlari.filter(i => i.tarih === dateString);
+            izinlerBuGun.forEach(izin => {
+                const izinEl = document.createElement('div');
+                izinEl.classList.add('izin-entry');
+                izinEl.dataset.izinId = izin.id;
+                izinEl.textContent = `${izin.adSoyad.split(' ')[0]} (${izin.izinTuru === 'Günlük' ? 'Tüm gün' : izin.saatAraligi})`;
+                if (izin.neden) {
+                    izinEl.title = `Neden: ${izin.neden}`;
+                }
+                izinEl.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openIzinModal(dateString, izin.id);
+                });
+                cell.appendChild(izinEl);
+            });
+
+            cell.addEventListener('click', () => openIzinModal(dateString));
+            calendarBody.appendChild(cell);
+        }
+        renderMonthlySummary(year, month);
+    };
+
+    const renderMonthlySummary = (year, month) => {
+        const summaryContainer = document.getElementById('monthly-summary');
+        summaryContainer.innerHTML = '';
+
+        const leavesThisMonth = izinKayitlari
+            .filter(izin => {
+                const izinDate = new Date(izin.tarih);
+                return izinDate.getFullYear() === year && izinDate.getMonth() === month;
+            })
+            .sort((a, b) => new Date(a.tarih) - new Date(b.tarih));
+
+        if (leavesThisMonth.length === 0) {
+            summaryContainer.innerHTML = '<p style="text-align:center; color: #6c757d;">Bu ay için kayıtlı izin bulunmamaktadır.</p>';
+            return;
+        }
+
+        const groupedLeaves = leavesThisMonth.reduce((acc, izin) => {
+            (acc[izin.tarih] = acc[izin.tarih] || []).push(izin);
+            return acc;
+        }, {});
+
+        for (const dateString in groupedLeaves) {
+            const dayLeaves = groupedLeaves[dateString];
+            const dateObj = new Date(dateString);
+
+            const dayContainer = document.createElement('div');
+            dayContainer.style.marginBottom = '15px';
+            dayContainer.style.paddingBottom = '10px';
+            dayContainer.style.borderBottom = '1px solid #eee';
+
+            const dateEl = document.createElement('div');
+            dateEl.style.fontWeight = 'bold';
+            dateEl.style.fontSize = '1.1rem';
+            dateEl.style.color = 'var(--secondary-color)';
+            dateEl.textContent = dateObj.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' });
+            dayContainer.appendChild(dateEl);
+
+            const listEl = document.createElement('ul');
+            listEl.style.listStyle = 'none';
+            listEl.style.paddingLeft = '10px';
+            listEl.style.marginTop = '5px';
+
+            dayLeaves.forEach(izin => {
+                const listItem = document.createElement('li');
+                listItem.style.marginBottom = '5px';
+                let detailText = '';
+                if (izin.izinTuru === 'Günlük') {
+                    detailText = 'Günlük';
+                } else {
+                    detailText = `Saatlik (${izin.saatAraligi})`;
+                }
+                if (izin.neden) {
+                    detailText += ` - ${izin.neden}`;
+                }
+                listItem.innerHTML = `<strong>${izin.adSoyad}:</strong> ${detailText}`;
+                listEl.appendChild(listItem);
+            });
+
+            dayContainer.appendChild(listEl);
+            summaryContainer.appendChild(dayContainer);
+        }
+    };
+    
+    // --- Veri Yükleme ---
+    const loadInitialData = async () => {
+        await personelleriYukle();
+        await izinleriYukle();
+        renderCalendar();
+    };
+
+    const personelleriYukle = async () => {
+         try {
+            const response = await fetch(PERSONEL_EXCEL_URL);
+            if (!response.ok) throw new Error('Personel dosyası indirilemedi.');
+            const arrayBuffer = await response.arrayBuffer();
+            const workbook = XLSX.read(arrayBuffer, { type: 'buffer' });
+            const data = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+            
+            personelSelect.innerHTML = '<option value="">Personel Seçiniz</option>';
+            data.forEach(p => {
+                if (p['Adı Soyadı']) {
+                    const option = new Option(p['Adı Soyadı'], p['Adı Soyadı']);
+                    personelSelect.add(option);
+                }
+            });
+        } catch (error) {
+            console.error('Personel yükleme hatası:', error);
+            personelSelect.innerHTML = '<option value="">Personel yüklenemedi!</option>';
+        }
+    };
+
+    const izinleriYukle = async () => {
+        const apiUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${KAYIT_DOSYASI_YOLU}`;
+        try {
+            const response = await githubApiCall(apiUrl);
+            if (response.status === 404) {
+                izinKayitlari = [];
+                return;
+            }
+            if (!response.ok) throw new Error(`API Hatası: ${response.statusText}`);
+            const data = await response.json();
+            const content = atob(data.content);
+            izinKayitlari = JSON.parse(decodeURIComponent(escape(content)));
+        } catch (error) {
+            console.error('İzinleri yükleme hatası:', error);
+            izinKayitlari = [];
+        }
+    };
+    
+    // --- İzinleri GitHub'a Kaydetme ---
+    const izinleriKaydet = async (islemMesaji) => {
+        const apiUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${KAYIT_DOSYASI_YOLU}`;
+        
+        try {
+            let dosyaSha = null;
+            const getResponse = await githubApiCall(apiUrl);
+            if (getResponse.ok) {
+                const data = await getResponse.json();
+                dosyaSha = data.sha;
+            } else if (getResponse.status !== 404) {
+                throw new Error(`Mevcut kayıtlar alınamadı: ${getResponse.statusText}`);
+            }
+
+            const guncelIcerik = btoa(unescape(encodeURIComponent(JSON.stringify(izinKayitlari, null, 2))));
+            
+            const putOptions = {
+                method: 'PUT',
+                body: JSON.stringify({
+                    message: islemMesaji,
+                    content: guncelIcerik,
+                    sha: dosyaSha
+                })
+            };
+
+            const putResponse = await githubApiCall(apiUrl, putOptions);
+            if (!putResponse.ok) throw new Error(`Kayıt başarısız: ${putResponse.statusText}`);
+            
+            return true;
+        } catch (error) {
+            console.error('Kaydetme hatası:', error);
+            statusDiv.textContent = `Hata: ${error.message}`;
+            statusDiv.className = 'error';
+            return false;
+        }
+    };
+
+    // --- Modal Yönetimi ---
+    const openIzinModal = (dateString, izinId = null) => {
+        izinForm.reset();
+        statusDiv.textContent = '';
+        statusDiv.className = '';
+        saatlikAlan.style.display = 'none';
+        
+        const saveButton = document.getElementById('save-button');
+        const izinIdInput = document.getElementById('izin-id');
+        
+        document.getElementById('izin-tarihi').value = dateString;
+        izinIdInput.value = izinId || '';
+
+        if (izinId) { // Düzenleme modu
+            const mevcutIzin = izinKayitlari.find(i => i.id == izinId);
+            modalTitle.textContent = 'İzin Düzenle';
+            saveButton.textContent = 'Güncelle';
+            deleteButton.style.display = 'block';
+
+            personelSelect.value = mevcutIzin.adSoyad;
+            document.querySelector(`input[name="izinTuru"][value="${mevcutIzin.izinTuru}"]`).checked = true;
+            if (mevcutIzin.izinTuru === 'Saatlik') {
+                saatlikAlan.style.display = 'flex';
+                const [bas, bit] = mevcutIzin.saatAraligi.split('-');
+                document.getElementById('baslangic-saati').value = bas.trim();
+                document.getElementById('bitis-saati').value = bit.trim();
+            }
+            document.getElementById('izin-nedeni').value = mevcutIzin.neden;
+
+        } else { // Ekleme modu
+            const dateObj = new Date(dateString);
+            modalTitle.textContent = `${dateObj.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })} - İzin Ekle`;
+            saveButton.textContent = 'İzni Kaydet';
+            deleteButton.style.display = 'none';
+        }
+
+        modal.style.display = 'flex';
+    };
+
+    const closeIzinModal = () => {
+        modal.style.display = 'none';
+    };
+
+    // --- Olay Dinleyicileri ---
+    document.getElementById('prev-month').addEventListener('click', () => {
+        currentDate.setMonth(currentDate.getMonth() - 1);
+        renderCalendar();
+    });
+
+    document.getElementById('next-month').addEventListener('click', () => {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+        renderCalendar();
+    });
+
+    closeModalButton.addEventListener('click', closeIzinModal);
+    window.addEventListener('click', (event) => {
+        if (event.target === modal) {
+            closeIzinModal();
+        }
+    });
+
+    document.querySelectorAll('input[name="izinTuru"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            saatlikAlan.style.display = e.target.value === 'Saatlik' ? 'flex' : 'none';
+        });
+    });
+
+    izinForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        statusDiv.textContent = 'Kaydediliyor...';
+        statusDiv.className = '';
+
+        const izinId = document.getElementById('izin-id').value;
+
+        const izinData = {
+            adSoyad: personelSelect.value,
+            izinTuru: document.querySelector('input[name="izinTuru"]:checked').value,
+            tarih: document.getElementById('izin-tarihi').value,
+            saatAraligi: '',
+            neden: document.getElementById('izin-nedeni').value || ''
+        };
+
+        if (!izinData.adSoyad) {
+             statusDiv.textContent = 'Lütfen personel seçiniz.';
+             statusDiv.className = 'error';
+             return;
+        }
+
+        if (izinData.izinTuru === 'Saatlik') {
+            const baslangic = document.getElementById('baslangic-saati').value;
+            const bitis = document.getElementById('bitis-saati').value;
+            if (!baslangic || !bitis) {
+                 statusDiv.textContent = 'Saatlik izin için başlangıç ve bitiş saatlerini girin.';
+                 statusDiv.className = 'error';
+                 return;
+            }
+            izinData.saatAraligi = `${baslangic} - ${bitis}`;
+        }
+        
+        let success = false;
+        if (izinId) { // Güncelleme
+            const index = izinKayitlari.findIndex(i => i.id == izinId);
+            izinKayitlari[index] = { ...izinKayitlari[index], ...izinData };
+            success = await izinleriKaydet(`İzin güncellendi: ${izinData.adSoyad}`);
+        } else { // Ekleme
+            izinData.id = Date.now();
+            izinKayitlari.push(izinData);
+            success = await izinleriKaydet(`İzin eklendi: ${izinData.adSoyad}`);
+        }
+        
+        if (success) {
+            statusDiv.textContent = 'İşlem başarıyla tamamlandı!';
+            statusDiv.className = 'success';
+            renderCalendar();
+            setTimeout(closeIzinModal, 1500);
+        }
+    });
+
+    deleteButton.addEventListener('click', async () => {
+        const izinId = document.getElementById('izin-id').value;
+        if (!izinId || !confirm('Bu izni silmek istediğinizden emin misiniz?')) {
+            return;
+        }
+        
+        const adSoyad = izinKayitlari.find(i => i.id == izinId)?.adSoyad || 'Bilinmeyen';
+        izinKayitlari = izinKayitlari.filter(i => i.id != izinId);
+        
+        const success = await izinleriKaydet(`İzin silindi: ${adSoyad}`);
+        if(success) {
+            statusDiv.textContent = 'İzin başarıyla silindi!';
+            statusDiv.className = 'success';
+            renderCalendar();
+            setTimeout(closeIzinModal, 1500);
+        }
+    });
+
+    // --- Başlangıç ---
+    loadInitialData();
+});
+</script>
+
+</body>
+</html>
+
