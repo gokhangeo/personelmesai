@@ -4,13 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Takvim Tabanlı Personel İzin Takip</title>
-    <!-- SheetJS (Excel okuma) kütüphanesi -->
+    <!-- SheetJS (Excel okuma/yazma) kütüphanesi -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root {
             --primary-color: #007bff;
             --secondary-color: #6c757d;
             --danger-color: #dc3545;
+            --success-color: #28a745;
             --background-color: #f8f9fa;
             --font-color: #212529;
             --border-color: #dee2e6;
@@ -142,6 +143,31 @@
         .form-buttons { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
         #save-button { background-color: var(--primary-color); }
         #delete-button { background-color: var(--danger-color); }
+        .summary-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 2px solid var(--border-color);
+        }
+        .summary-header h3 {
+            color: var(--primary-color);
+            margin: 0;
+            padding: 15px 0;
+        }
+        .report-buttons button {
+            background-color: var(--success-color);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+            font-size: 0.9rem;
+        }
+        .report-buttons button:hover {
+            background-color: #218838;
+        }
     </style>
 </head>
 <body>
@@ -168,10 +194,14 @@
 
 <!-- Aylık Özet -->
 <div class="container" style="margin-top: 20px;">
-    <h3 style="text-align: center; color: var(--primary-color); border-bottom: 2px solid var(--border-color); padding-bottom: 10px;">
-        Ayın İzin Özeti
-    </h3>
-    <div id="monthly-summary">
+    <div class="summary-header">
+        <h3>Ayın İzin Özeti</h3>
+        <div class="report-buttons">
+            <button id="export-monthly-report">Aylık Rapor (Excel)</button>
+            <button id="export-yearly-report">Yıllık Rapor (Excel)</button>
+        </div>
+    </div>
+    <div id="monthly-summary" style="padding: 20px;">
         <!-- Gün bazlı özet buraya eklenecek -->
     </div>
 </div>
@@ -498,6 +528,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeIzinModal = () => {
         modal.style.display = 'none';
     };
+    
+    // --- Excel Raporlama ---
+    const exportToExcel = (data, fileName) => {
+        if (data.length === 0) {
+            alert('Raporlanacak izin kaydı bulunmamaktadır.');
+            return;
+        }
+
+        const formattedData = data.map(izin => ({
+            'Personel Adı Soyadı': izin.adSoyad,
+            'İzin Tarihi': new Date(izin.tarih).toLocaleDateString('tr-TR'),
+            'İzin Türü': izin.izinTuru,
+            'Saat Aralığı': izin.saatAraligi || '-',
+            'İzin Nedeni': izin.neden || '-'
+        })).sort((a,b) => new Date(a['İzin Tarihi'].split('.').reverse().join('-')) - new Date(b['İzin Tarihi'].split('.').reverse().join('-')));
+
+
+        const ws = XLSX.utils.json_to_sheet(formattedData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'İzin Raporu');
+        XLSX.writeFile(wb, `${fileName}.xlsx`);
+    };
 
     // --- Olay Dinleyicileri ---
     document.getElementById('prev-month').addEventListener('click', () => {
@@ -591,6 +643,33 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(closeIzinModal, 1500);
         }
     });
+    
+    document.getElementById('export-monthly-report').addEventListener('click', () => {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        const monthName = new Intl.DateTimeFormat('tr-TR', { month: 'long' }).format(currentDate);
+
+        const monthlyData = izinKayitlari.filter(izin => {
+            const izinDate = new Date(izin.tarih);
+            return izinDate.getFullYear() === year && izinDate.getMonth() === month;
+        });
+
+        const fileName = `izin-raporu-${monthName}-${year}`;
+        exportToExcel(monthlyData, fileName);
+    });
+
+    document.getElementById('export-yearly-report').addEventListener('click', () => {
+        const year = currentDate.getFullYear();
+        
+        const yearlyData = izinKayitlari.filter(izin => {
+            const izinDate = new Date(izin.tarih);
+            return izinDate.getFullYear() === year;
+        });
+
+        const fileName = `izin-raporu-${year}`;
+        exportToExcel(yearlyData, fileName);
+    });
+
 
     // --- Başlangıç ---
     loadInitialData();
