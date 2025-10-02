@@ -54,5 +54,13 @@
     "saatAraligi": "15:00 - 17:00",
     "neden": "Otogar",
     "id": 1759209060529
+  },
+  {
+    "adSoyad": "MEHMET CEYLAN",
+    "izinTuru": "Saatlik",
+    "tarih": "2025-10-03",
+    "saatAraligi": "08:00 - 11:00",
+    "neden": "Keşif",
+    "id": 1759403102201
   }
 ]
