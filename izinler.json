@@ -310,5 +310,13 @@
     "saatAraligi": "13:00 - 14:00",
     "neden": "Doktor randevusu",
     "id": 1763375035436
+  },
+  {
+    "adSoyad": "SARİYE KUŞÇU",
+    "izinTuru": "Saatlik",
+    "tarih": "2025-11-17",
+    "saatAraligi": "14:10 - 15:10",
+    "neden": "ARAZİ KONTROL",
+    "id": 1763377843230
   }
 ]
