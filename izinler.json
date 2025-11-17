@@ -294,5 +294,13 @@
     "saatAraligi": "13:00 - 13:30",
     "neden": "İZİN",
     "id": 1763109788875
+  },
+  {
+    "adSoyad": "MEHMET CEYLAN",
+    "izinTuru": "Saatlik",
+    "tarih": "2025-11-17",
+    "saatAraligi": "08:36 - 11:00",
+    "neden": "Adliye",
+    "id": 1763357810493
   }
 ]
