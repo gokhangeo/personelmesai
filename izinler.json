@@ -326,5 +326,13 @@
     "saatAraligi": "08:00 - 09:00",
     "neden": "Doktor randevusu",
     "id": 1763442615608
+  },
+  {
+    "adSoyad": "NURHAN ARSLAN",
+    "izinTuru": "Saatlik",
+    "tarih": "2025-11-19",
+    "saatAraligi": "08:00 - 10:00",
+    "neden": "Hastane",
+    "id": 1763529174533
   }
 ]
