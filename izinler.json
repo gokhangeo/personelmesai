@@ -334,5 +334,13 @@
     "saatAraligi": "08:00 - 10:00",
     "neden": "Hastane",
     "id": 1763529174533
+  },
+  {
+    "adSoyad": "ÖZLEM AYDINLI",
+    "izinTuru": "Saatlik",
+    "tarih": "2025-11-19",
+    "saatAraligi": "09:00 - 11:00",
+    "neden": "ARAZİ KONTROL",
+    "id": 1763530428504
   }
 ]
