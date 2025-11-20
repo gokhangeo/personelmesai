@@ -276,8 +276,8 @@
     </div>
 </div>
 
-<!-- İzin Ekleme/Düzenleme Modalı (app-content içinde olmalı ki gizlensin) -->
-<div id="izin-modal" class="modal"> <!-- "app-content" class'ı buradan kaldırıldı -->
+<!-- İzin Ekleme/Düzenleme Modalı -->
+<div id="izin-modal" class="modal">
     <div class="modal-content">
         <span class="close-button">&times;</span>
         <h3 id="modal-title">İzin Ekle</h3>
@@ -321,7 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('login-form');
     const passwordInput = document.getElementById('password-input');
     const loginStatus = document.getElementById('login-status');
-    const mainAppWrapper = document.getElementById('main-app-wrapper'); // Değişiklik
+    const mainAppWrapper = document.getElementById('main-app-wrapper');
     const CORRECT_PASSWORD = '2203';
 
     loginForm.addEventListener('submit', (e) => {
@@ -330,7 +330,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (password === CORRECT_PASSWORD) {
             // Şifre doğru, uygulamayı göster
             loginScreen.style.display = 'none';
-            mainAppWrapper.style.display = 'block'; // Değişiklik
+            mainAppWrapper.style.display = 'block';
             // Ana uygulama kodunu (takvim vs.) burada başlat
             initializeApp();
         } else {
@@ -341,9 +341,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 
-    // --- ANA UYGULAMA KODU (initializeApp içine taşındı) ---
-    
-    // Gerekli bilgileri global (veya app scope) tanımla
+    // --- ANA UYGULAMA KODU ---
     const GITHUB_OWNER = 'gokhangeo';
     const GITHUB_REPO = 'personelmesai';
     const KAYIT_DOSYASI_YOLU = 'izinler.json';
@@ -351,10 +349,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const tokenParts = ['ghp_2KS6iY', '7t1ka6bKyHw', 'ONJkXdwOU', 'VhrU3PqlSX'];
     const GITHUB_TOKEN = tokenParts.join('');
 
-    // Elementler
     let calendarBody, currentMonthYearEl, modal, modalTitle, closeModalButton, izinForm, personelSelect, statusDiv, saatlikAlan, deleteButton;
-    
-    // Durum (State)
     let currentDate = new Date();
     let izinKayitlari = [];
 
@@ -499,7 +494,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const personelleriYukle = async () => {
          try {
-            // Yükleniyor... metnini güncelle
             personelSelect.innerHTML = '<option value="">Personel listesi yükleniyor...</option>';
             const response = await fetch(PERSONEL_EXCEL_URL);
             if (!response.ok) throw new Error('Personel dosyası indirilemedi.');
@@ -530,8 +524,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (!response.ok) throw new Error(`API Hatası: ${response.statusText}`);
             const data = await response.json();
-            const content = atob(data.content);
-            // UTF-8 decode
             const decodedContent = decodeURIComponent(escape(window.atob(data.content)));
             izinKayitlari = JSON.parse(decodedContent);
         } catch (error) {
@@ -554,7 +546,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(`Mevcut kayıtlar alınamadı: ${getResponse.statusText}`);
             }
 
-            // UTF-8 encode
             const guncelIcerik = window.btoa(unescape(encodeURIComponent(JSON.stringify(izinKayitlari, null, 2))));
             
             const putOptions = {
@@ -591,12 +582,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('izin-tarihi').value = dateString;
         izinIdInput.value = izinId || '';
 
-        if (izinId) { // Düzenleme modu
+        if (izinId) { 
             const mevcutIzin = izinKayitlari.find(i => i.id == izinId);
-            if(!mevcutIzin) {
-                console.error("Düzenlenecek izin bulunamadı:", izinId);
-                return;
-            }
+            if(!mevcutIzin) return;
+            
             modalTitle.textContent = 'İzin Düzenle';
             saveButton.textContent = 'Güncelle';
             deleteButton.style.display = 'block';
@@ -613,7 +602,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             document.getElementById('izin-nedeni').value = mevcutIzin.neden;
 
-        } else { // Ekleme modu
+        } else { 
             const dateObj = new Date(dateString);
             modalTitle.textContent = `${dateObj.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })} - İzin Ekle`;
             saveButton.textContent = 'İzni Kaydet';
@@ -630,7 +619,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Excel Raporlama ---
     const exportToExcel = (data, fileName) => {
         if (data.length === 0) {
-            // alert() yerine custom bir mesaj kullanalım
             statusDiv.textContent = 'Raporlanacak izin kaydı bulunmamaktadır.';
             statusDiv.className = 'error';
             setTimeout(() => { statusDiv.textContent = ''; statusDiv.className = ''; }, 3000);
@@ -654,7 +642,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- ANA UYGULAMAYI BAŞLATMA FONKSİYONU ---
     function initializeApp() {
-        // Elementleri burada bul
         calendarBody = document.getElementById('calendar-body');
         currentMonthYearEl = document.getElementById('current-month-year');
         modal = document.getElementById('izin-modal');
@@ -666,7 +653,6 @@ document.addEventListener('DOMContentLoaded', () => {
         saatlikAlan = document.getElementById('saatlik-alan');
         deleteButton = document.getElementById('delete-button');
 
-        // Olay Dinleyicileri (Sadece bir kez eklenmeli)
         document.getElementById('prev-month').addEventListener('click', () => {
             currentDate.setMonth(currentDate.getMonth() - 1);
             renderCalendar();
@@ -723,13 +709,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             let success = false;
-            if (izinId) { // Güncelleme
+            if (izinId) { 
                 const index = izinKayitlari.findIndex(i => i.id == izinId);
                 if (index > -1) {
                     izinKayitlari[index] = { ...izinKayitlari[index], ...izinData, id: izinKayitlari[index].id };
                 }
                 success = await izinleriKaydet(`İzin güncellendi: ${izinData.adSoyad}`);
-            } else { // Ekleme
+            } else { 
                 izinData.id = Date.now();
                 izinKayitlari.push(izinData);
                 success = await izinleriKaydet(`İzin eklendi: ${izinData.adSoyad}`);
@@ -745,11 +731,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         deleteButton.addEventListener('click', async () => {
             const izinId = document.getElementById('izin-id').value;
-            // confirm() yerine basit bir doğrulama
             if (!izinId) return;
             
-            const eminMisin = prompt("Bu izni silmek istediğinizden emin misiniz? Evet yazın.");
-            if (eminMisin !== 'Evet' && eminMisin !== 'evet') {
+            // Burası değiştirildi: Artık yazı yazmaya gerek yok, sadece onay yeterli.
+            if (!confirm("Bu izni silmek istediğinizden emin misiniz?")) {
                 return;
             }
             
@@ -791,12 +776,8 @@ document.addEventListener('DOMContentLoaded', () => {
             exportToExcel(yearlyData, fileName);
         });
 
-
-        // --- Başlangıç Verilerini Yükle ---
         loadInitialData();
     }
-    
-    // Not: initializeApp() fonksiyonu şifre doğru girildikten sonra çağrılıyor.
 });
 </script>
 
