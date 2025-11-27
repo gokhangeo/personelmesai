@@ -422,5 +422,13 @@
     "saatAraligi": "09:30 - 10:30",
     "neden": "ARAZİ KONTROL",
     "id": 1764224602499
+  },
+  {
+    "adSoyad": "SEVAL ÇELİK",
+    "izinTuru": "Saatlik",
+    "tarih": "2025-11-28",
+    "saatAraligi": "08:00 - 09:00",
+    "neden": "DOKTOR",
+    "id": 1764249711263
   }
 ]
