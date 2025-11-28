@@ -438,5 +438,13 @@
     "saatAraligi": "08:00 - 08:30",
     "neden": "Doktor randevusu",
     "id": 1764306317016
+  },
+  {
+    "adSoyad": "AHMET ÇELİK",
+    "izinTuru": "Saatlik",
+    "tarih": "2025-11-28",
+    "saatAraligi": "09:00 - 10:00",
+    "neden": "Mezitli Belediyesi",
+    "id": 1764309534548
   }
 ]
