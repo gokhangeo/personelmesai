@@ -494,5 +494,13 @@
     "saatAraligi": "13:00 - 14:00",
     "neden": "Doktor randevusu",
     "id": 1764758223158
+  },
+  {
+    "adSoyad": "DUDU POYRAZ",
+    "izinTuru": "Saatlik",
+    "tarih": "2025-12-03",
+    "saatAraligi": "14:00 - 15:00",
+    "neden": "ARAZİ KONTROL",
+    "id": 1764759317313
   }
 ]
