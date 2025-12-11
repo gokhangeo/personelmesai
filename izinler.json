@@ -542,5 +542,13 @@
     "saatAraligi": "13:00 - 13:30",
     "neden": "HASTANE",
     "id": 1765449842722
+  },
+  {
+    "adSoyad": "DUDU POYRAZ",
+    "izinTuru": "Saatlik",
+    "tarih": "2025-12-11",
+    "saatAraligi": "15:00 - 16:00",
+    "neden": "ARAZİ KONTROL",
+    "id": 1765457763451
   }
 ]
