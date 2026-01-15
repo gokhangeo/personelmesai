@@ -800,14 +800,6 @@
     "neden": "Sosyal Hizmetler İl Müdürlüğü"
   },
   {
-    "id": 1768367674611,
-    "adSoyad": "NURHAN ARSLAN",
-    "izinTuru": "Saatlik",
-    "tarih": "2026-01-14",
-    "saatAraligi": "08:00 - 10:00",
-    "neden": "HASTANE"
-  },
-  {
     "id": 1768371347873,
     "adSoyad": "VOLKAN İZCİ",
     "izinTuru": "Saatlik",
@@ -830,5 +822,13 @@
     "tarih": "2026-01-14",
     "saatAraligi": "11:20 - 12:00",
     "neden": "ARAZİ KONTROL"
+  },
+  {
+    "id": 1768367674611,
+    "adSoyad": "NURHAN ARSLAN",
+    "izinTuru": "Saatlik",
+    "tarih": "2026-01-14",
+    "saatAraligi": "08:00 - 10:00",
+    "neden": "HASTANE"
   }
 ]
