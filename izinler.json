@@ -830,5 +830,13 @@
     "tarih": "2026-01-14",
     "saatAraligi": "08:00 - 17:00",
     "neden": "HASTANE"
+  },
+  {
+    "id": 1768473879597,
+    "adSoyad": "VOLKAN İZCİ",
+    "izinTuru": "Saatlik",
+    "tarih": "2026-01-15",
+    "saatAraligi": "13:45 - 14:45",
+    "neden": "ARAZİ KONTROL"
   }
 ]
