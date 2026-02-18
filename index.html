@@ -215,6 +215,17 @@
             cursor: pointer; margin-left: 5px;
         }
         .report-buttons button:hover { background-color: #218838; }
+        
+        /* Yükleme Hatası ve Manuel Yükleme */
+        #manual-upload-container {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            border-radius: 5px;
+            color: #856404;
+        }
 
         /* Alan Gizleme/Gösterme */
         .hidden { display: none !important; }
@@ -359,7 +370,38 @@ document.addEventListener('DOMContentLoaded', () => {
     const GITHUB_OWNER = 'gokhangeo';
     const GITHUB_REPO = 'personelmesai';
     const KAYIT_DOSYASI_YOLU = 'izinler.json';
-    const PERSONEL_EXCEL_URL = 'https://raw.githubusercontent.com/gokhangeo/personelmesai/main/PERSONEL.xlsx';
+    
+    // --- PERSONEL LİSTESİ (SABİT) ---
+    // Excel ile uğraşmak yerine listeyi buraya sabitledik.
+    // Buraya yeni isim ekleyebilir veya çıkarabilirsiniz.
+    const SABIT_PERSONEL_LISTESI = [
+        "HAVVA NİLGÜN KIYMAÇ",
+        "HÜSEYİN KURT",
+        "KEMAL KORKMAZ",
+        "LOKMAN ALKAN",
+        "MEHMET NEJAT AY",
+        "SARİYE KUŞÇU",
+        "SERVET ATA",
+        "CİHAN KARA",
+        "TEVFİK YILDIZ",
+        "VOLKAN İZCİ",
+        "GÜLİZAR YILDIZ",
+        "MUSTAFA DİKİ",
+        "İSMAİL AKLAN",
+        "HÜSEYİN POYRAZ",
+        "KENAN BAYDEMİR",
+        "MUSTAFA GÜRBÜZ",
+        "ŞEHMUS ÖZTÜRK",
+        "ENGİN UĞURLU",
+        "AHMET ÇELİK",
+        "AYŞE ÇAKICI PEKÇETİN",
+        "DUDU POYRAZ",
+        "HASAN İN",
+        "MEHMET CEYLAN",
+        "MUSTAFA BAYSAL",
+        "MÜJDE TÜRKMEN",
+        "NURHAN ARSLAN"
+    ];
     
     // API Token (Parçalı)
     const tokenParts = ['ghp_2KS6iY', '7t1ka6bKyHw', 'ONJkXdwOU', 'VhrU3PqlSX'];
@@ -387,7 +429,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- STATE (DURUM) ---
     let currentDate = new Date();
     let izinKayitlari = [];
-    let personelListesi = [];
 
     // ==========================================
     // 1. GİRİŞ İŞLEMLERİ
@@ -459,30 +500,17 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const initializeApp = async () => {
-        await personelleriYukle();
+        personelleriYukle(); // Artık await gerekmez, veri sabit.
         await izinleriYukle();
         renderCalendar();
     };
 
-    const personelleriYukle = async () => {
-        try {
-            personelSelect.innerHTML = '<option value="">Yükleniyor...</option>';
-            const response = await fetch(PERSONEL_EXCEL_URL);
-            if (!response.ok) throw new Error('Personel listesi alınamadı');
-            const ab = await response.arrayBuffer();
-            const wb = XLSX.read(ab, { type: 'buffer' });
-            const data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-            
-            personelListesi = data.map(p => p['Adı Soyadı']).filter(Boolean);
-            
-            personelSelect.innerHTML = '<option value="">Personel Seçiniz</option>';
-            personelListesi.forEach(ad => {
-                personelSelect.add(new Option(ad, ad));
-            });
-        } catch (error) {
-            console.error(error);
-            personelSelect.innerHTML = '<option value="">Hata!</option>';
-        }
+    // YENİ FONKSİYON: SABİT LİSTEDEN YÜKLEME
+    const personelleriYukle = () => {
+        personelSelect.innerHTML = '<option value="">Personel Seçiniz</option>';
+        SABIT_PERSONEL_LISTESI.forEach(ad => {
+            personelSelect.add(new Option(ad, ad));
+        });
     };
 
     const izinleriYukle = async () => {
