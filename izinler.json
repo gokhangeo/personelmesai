@@ -990,5 +990,21 @@
     "tarih": "2026-02-20",
     "saatAraligi": "13:30 - 15:00",
     "neden": "ARAZİ KONTROL"
+  },
+  {
+    "id": 1771587814019,
+    "adSoyad": "KEMAL KORKMAZ",
+    "izinTuru": "Saatlik",
+    "tarih": "2026-02-20",
+    "saatAraligi": "14:45 - 16:00",
+    "neden": "ARAZİ KONTROL"
+  },
+  {
+    "id": 1771587818987,
+    "adSoyad": "KEMAL KORKMAZ",
+    "izinTuru": "Saatlik",
+    "tarih": "2026-02-20",
+    "saatAraligi": "14:45 - 16:00",
+    "neden": "ARAZİ KONTROL"
   }
 ]
