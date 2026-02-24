@@ -1016,19 +1016,19 @@
     "neden": "ARAZİ KONTROL"
   },
   {
-    "id": 1771910139972,
-    "adSoyad": "KEMAL KORKMAZ",
+    "id": 1771910175740,
+    "adSoyad": "AHMET ÇELİK",
     "izinTuru": "Saatlik",
     "tarih": "2026-02-24",
     "saatAraligi": "08:15 - 10:30",
     "neden": "ARAZİ KONTROL"
   },
   {
-    "id": 1771910175740,
-    "adSoyad": "AHMET ÇELİK",
+    "id": 1771910139972,
+    "adSoyad": "KEMAL KORKMAZ",
     "izinTuru": "Saatlik",
     "tarih": "2026-02-24",
-    "saatAraligi": "08:15 - 10:30",
+    "saatAraligi": "08:15 - 10:00",
     "neden": "ARAZİ KONTROL"
   }
 ]
