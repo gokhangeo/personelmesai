@@ -1214,5 +1214,21 @@
     "tarih": "2026-04-01",
     "saatAraligi": "13:00 - 15:00",
     "neden": "HASTANE"
+  },
+  {
+    "id": 1775043818536,
+    "adSoyad": "DUDU POYRAZ",
+    "izinTuru": "Saatlik",
+    "tarih": "2026-04-01",
+    "saatAraligi": "15:30 - 16:00",
+    "neden": "ARAZİ KONTROL"
+  },
+  {
+    "id": 1775043826039,
+    "adSoyad": "DUDU POYRAZ",
+    "izinTuru": "Saatlik",
+    "tarih": "2026-04-01",
+    "saatAraligi": "15:30 - 16:30",
+    "neden": "ARAZİ KONTROL"
   }
 ]
