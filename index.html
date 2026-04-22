@@ -92,8 +92,7 @@
         }
         .app-title { font-size: 1.2rem; font-weight: bold; }
         .action-buttons { display: flex; gap: 10px; }
-        .btn-download-plan {
-            background-color: var(--info-color);
+        .btn-action {
             color: white;
             border: none;
             padding: 8px 15px;
@@ -102,7 +101,10 @@
             text-decoration: none;
             font-size: 0.9rem;
         }
+        .btn-download-plan { background-color: var(--info-color); }
         .btn-download-plan:hover { background-color: #138496; }
+        .btn-manage-personel { background-color: var(--secondary-color); }
+        .btn-manage-personel:hover { background-color: #5a6268; }
 
         /* TAKVİM */
         .calendar-header {
@@ -216,6 +218,24 @@
         }
         .report-buttons button:hover { background-color: #218838; }
 
+        /* Personel Listesi Modal İçeriği */
+        .personel-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        .btn-personel-sil {
+            background-color: var(--danger-color);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
         /* Alan Gizleme/Gösterme */
         .hidden { display: none !important; }
         
@@ -244,11 +264,14 @@
 <!-- ANA UYGULAMA (Gizli) -->
 <div id="main-app-wrapper" class="app-content">
     
-    <!-- Üst Bar: Yıllık İzin Çizelgesi İndirme -->
+    <!-- Üst Bar -->
     <div class="container app-header">
         <div class="app-title">Personel İzin Yönetimi</div>
         <div class="action-buttons">
-            <button id="btn-download-blank-plan" class="btn-download-plan">
+            <button id="btn-open-personel-modal" class="btn-action btn-manage-personel">
+                👥 Personel Yönetimi
+            </button>
+            <button id="btn-download-blank-plan" class="btn-action btn-download-plan">
                 📄 2026 Boş Yıllık İzin Çizelgesi İndir
             </button>
         </div>
@@ -296,7 +319,7 @@
 <!-- İzin Ekleme/Düzenleme Modalı -->
 <div id="izin-modal" class="modal">
     <div class="modal-content">
-        <span class="close-button">&times;</span>
+        <span class="close-button" id="close-izin-modal">&times;</span>
         <h3 id="modal-title">İzin Girişi</h3>
         <form id="izin-form">
             <input type="hidden" id="izin-id">
@@ -364,6 +387,27 @@
     </div>
 </div>
 
+<!-- Personel Yönetimi Modalı -->
+<div id="personel-yonetim-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-button" id="close-personel-modal">&times;</span>
+        <h3>Personel Yönetimi</h3>
+        
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <input type="text" id="yeni-personel-adi" placeholder="Yeni Personel Adı Soyadı" style="flex: 1;">
+            <button id="btn-personel-ekle" style="background-color: var(--success-color); color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer;">Ekle</button>
+        </div>
+        
+        <div style="max-height: 300px; overflow-y: auto; border: 1px solid #ccc; border-radius: 5px; padding: 10px;">
+            <ul id="personel-duzenle-listesi" style="list-style: none; padding: 0; margin: 0;">
+                <!-- JS ile dolacak -->
+            </ul>
+        </div>
+        
+        <div id="personel-status" style="margin-top: 10px; font-weight: bold; text-align: center;"></div>
+    </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     // --- SABİTLER VE AYARLAR ---
@@ -371,38 +415,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const GITHUB_OWNER = 'gokhangeo';
     const GITHUB_REPO = 'personelmesai';
     const KAYIT_DOSYASI_YOLU = 'izinler.json';
+    const PERSONEL_DOSYASI_YOLU = 'personel.json'; // Yeni dosyamız
     
-    // --- PERSONEL LİSTESİ (SABİT) ---
-    // Alfabetik olarak sıralandı ve ÖZLEM AYDINLI eklendi.
-    const SABIT_PERSONEL_LISTESI = [
-        "AHMET ÇELİK",
-        "AYŞE ÇAKICI PEKÇETİN",
-        "CİHAN KARA",
-        "DUDU POYRAZ",
-        "ENGİN UĞURLU",
-        "GÜLİZAR YILDIZ",
-        "HASAN İN",
-        "HAVVA NİLGÜN KIYMAÇ",
-        "HÜSEYİN KURT",
-        "HÜSEYİN POYRAZ",
-        "İSMAİL AKLAN",
-        "KEMAL KORKMAZ",
-        "KENAN BAYDEMİR",
-        "LOKMAN ALKAN",
-        "MEHMET CEYLAN",
-        "MEHMET NEJAT AY",
-        "MUSTAFA BAYSAL",
-        "MUSTAFA DİKİ",
-        "MUSTAFA GÜRBÜZ",
-        "MÜJDE TÜRKMEN",
-        "NURHAN ARSLAN",
-        "ÖZLEM AYDINLI",
-        "SARİYE KUŞÇU",
-        "SERVET ATA",
-        "SEVAL ÇELİK",
-        "ŞEHMUS ÖZTÜRK",
-        "TEVFİK YILDIZ",
-        "VOLKAN İZCİ"
+    // Uygulama ilk kez kurulduğunda veya dosya bulunamadığında kullanılacak varsayılan liste
+    const VARSAYILAN_PERSONEL_LISTESI = [
+        "AHMET ÇELİK", "AYŞE ÇAKICI PEKÇETİN", "CİHAN KARA", "DUDU POYRAZ", "ENGİN UĞURLU",
+        "GÜLİZAR YILDIZ", "HASAN İN", "HAVVA NİLGÜN KIYMAÇ", "HÜSEYİN KURT", "HÜSEYİN POYRAZ",
+        "İSMAİL AKLAN", "KEMAL KORKMAZ", "KENAN BAYDEMİR", "LOKMAN ALKAN", "MEHMET CEYLAN",
+        "MEHMET NEJAT AY", "MUSTAFA BAYSAL", "MUSTAFA DİKİ", "MUSTAFA GÜRBÜZ", "MÜJDE TÜRKMEN",
+        "NURHAN ARSLAN", "ÖZLEM AYDINLI", "SARİYE KUŞÇU", "SERVET ATA", "SEVAL ÇELİK",
+        "ŞEHMUS ÖZTÜRK", "TEVFİK YILDIZ", "VOLKAN İZCİ"
     ];
     
     // API Token (Parçalı)
@@ -414,15 +436,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const mainAppWrapper = document.getElementById('main-app-wrapper');
     const calendarBody = document.getElementById('calendar-body');
     const currentMonthYearEl = document.getElementById('current-month-year');
-    const modal = document.getElementById('izin-modal');
-    const modalTitle = document.getElementById('modal-title');
+    
+    const izinModal = document.getElementById('izin-modal');
+    const personelModal = document.getElementById('personel-yonetim-modal');
+    
     const izinForm = document.getElementById('izin-form');
     const personelSelect = document.getElementById('personel-listesi');
     const statusDiv = document.getElementById('status');
+    const personelStatusDiv = document.getElementById('personel-status');
     const deleteButton = document.getElementById('delete-button');
     const saveButton = document.getElementById('save-button');
     
-    // Form Alanları
     const radioButtons = document.querySelectorAll('input[name="izinTuru"]');
     const tekTarihWrapper = document.getElementById('tek-tarih-wrapper');
     const tarihAraligiWrapper = document.getElementById('tarih-araligi-wrapper');
@@ -431,6 +455,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- STATE (DURUM) ---
     let currentDate = new Date();
     let izinKayitlari = [];
+    let personelListesi = [];
 
     // ==========================================
     // 1. GİRİŞ İŞLEMLERİ
@@ -447,42 +472,30 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ==========================================
-    // 2. YILLIK İZİN ÇİZELGESİ OLUŞTURUCU (EXCEL)
+    // 2. YILLIK İZİN ÇİZELGESİ (EXCEL)
     // ==========================================
     document.getElementById('btn-download-blank-plan').addEventListener('click', () => {
         const wb = XLSX.utils.book_new();
-        
-        // Başlıklar
         const ws_data = [
             ["MERSİN KADASTRO MÜDÜRLÜĞÜ 2026 YILI YILLIK İZİN PLANLAMA ÇİZELGESİ"],
             ["Personel Adı Soyadı:", "__________________________"],
             ["Ünvanı:", "__________________________"],
-            [], // Boş satır
+            [],
             ["AY", "GÜNLER (Planlanan izin tarihlerini işaretleyiniz)"]
         ];
 
-        // 2026 Yılı Ayları
         const aylar = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
-        
         aylar.forEach(ay => {
-            // Basit bir ızgara görünümü: Ay Adı | 1 2 3 ... 31
             let row = [ay]; 
-            for(let i=1; i<=31; i++) {
-                row.push(i);
-            }
+            for(let i=1; i<=31; i++) row.push(i);
             ws_data.push(row);
         });
-
         ws_data.push([], ["Onay:", "........................................"]);
 
         const ws = XLSX.utils.aoa_to_sheet(ws_data);
-        
-        // Sütun genişlikleri (Görsellik için)
-        const wscols = [{wch:15}]; // İlk sütun geniş
-        for(let i=0; i<31; i++) wscols.push({wch:3}); // Gün sütunları dar
+        const wscols = [{wch:15}];
+        for(let i=0; i<31; i++) wscols.push({wch:3});
         ws['!cols'] = wscols;
-
-        // Hücre birleştirme (Başlık için)
         ws['!merges'] = [{ s: {r:0, c:0}, e: {r:0, c:10} }]; 
 
         XLSX.utils.book_append_sheet(wb, ws, "2026_Planlama");
@@ -502,38 +515,43 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const initializeApp = async () => {
-        personelleriYukle(); 
-        await izinleriYukle();
+        await personelleriYukleAPI(); 
+        await izinleriYukleAPI();
         renderCalendar();
     };
 
-    const personelleriYukle = () => {
-        personelSelect.innerHTML = '<option value="">Personel Seçiniz</option>';
-        SABIT_PERSONEL_LISTESI.forEach(ad => {
-            personelSelect.add(new Option(ad, ad));
-        });
-    };
-
-    const izinleriYukle = async () => {
+    // --- PERSONEL VERİ İŞLEMLERİ ---
+    const personelleriYukleAPI = async () => {
         try {
-            const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${KAYIT_DOSYASI_YOLU}`;
+            personelSelect.innerHTML = '<option value="">Personel Yükleniyor...</option>';
+            const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${PERSONEL_DOSYASI_YOLU}`;
             const res = await githubApiCall(url);
-            if (res.status === 404) { izinKayitlari = []; return; }
-            const data = await res.json();
-            // UTF-8 Decode
-            const content = decodeURIComponent(escape(window.atob(data.content)));
-            izinKayitlari = JSON.parse(content);
+            
+            if (res.status === 404) { 
+                // İlk kurulum: Github'da personel.json yoksa varsayılanı kullan ve Github'a kaydet
+                personelListesi = [...VARSAYILAN_PERSONEL_LISTESI];
+                await personelleriKaydetAPI('İlk personel listesi oluşturuldu');
+            } else {
+                const data = await res.json();
+                const content = decodeURIComponent(escape(window.atob(data.content)));
+                personelListesi = JSON.parse(content);
+            }
+            
+            // Listeyi her ihtimale karşı alfabetik sırala
+            personelListesi.sort((a, b) => a.localeCompare(b, 'tr'));
+            personelSelectGuncelle();
+            
         } catch (error) {
-            console.error('İzin yükleme hatası:', error);
-            izinKayitlari = [];
+            console.error('Personel yükleme hatası:', error);
+            // Hata olursa en azından varsayılanı göster
+            personelListesi = [...VARSAYILAN_PERSONEL_LISTESI];
+            personelSelectGuncelle();
         }
     };
 
-    const izinleriKaydet = async (mesaj) => {
+    const personelleriKaydetAPI = async (mesaj) => {
         try {
-            const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${KAYIT_DOSYASI_YOLU}`;
-            
-            // Mevcut SHA'yı al
+            const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${PERSONEL_DOSYASI_YOLU}`;
             let sha = null;
             const checkRes = await githubApiCall(url);
             if (checkRes.ok) {
@@ -542,13 +560,56 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // UTF-8 Encode
-            const content = window.btoa(unescape(encodeURIComponent(JSON.stringify(izinKayitlari, null, 2))));
+            const content = window.btoa(unescape(encodeURIComponent(JSON.stringify(personelListesi, null, 2))));
 
             const res = await githubApiCall(url, {
                 method: 'PUT',
                 body: JSON.stringify({ message: mesaj, content: content, sha: sha })
             });
 
+            return res.ok;
+        } catch (error) {
+            console.error('Personel kaydetme hatası:', error);
+            return false;
+        }
+    };
+
+    const personelSelectGuncelle = () => {
+        personelSelect.innerHTML = '<option value="">Personel Seçiniz</option>';
+        personelListesi.forEach(ad => {
+            personelSelect.add(new Option(ad, ad));
+        });
+    };
+
+    // --- İZİN VERİ İŞLEMLERİ ---
+    const izinleriYukleAPI = async () => {
+        try {
+            const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${KAYIT_DOSYASI_YOLU}`;
+            const res = await githubApiCall(url);
+            if (res.status === 404) { izinKayitlari = []; return; }
+            const data = await res.json();
+            const content = decodeURIComponent(escape(window.atob(data.content)));
+            izinKayitlari = JSON.parse(content);
+        } catch (error) {
+            console.error('İzin yükleme hatası:', error);
+            izinKayitlari = [];
+        }
+    };
+
+    const izinleriKaydetAPI = async (mesaj) => {
+        try {
+            const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${KAYIT_DOSYASI_YOLU}`;
+            let sha = null;
+            const checkRes = await githubApiCall(url);
+            if (checkRes.ok) {
+                const data = await checkRes.json();
+                sha = data.sha;
+            }
+            const content = window.btoa(unescape(encodeURIComponent(JSON.stringify(izinKayitlari, null, 2))));
+            const res = await githubApiCall(url, {
+                method: 'PUT',
+                body: JSON.stringify({ message: mesaj, content: content, sha: sha })
+            });
             if (!res.ok) throw new Error('Kayıt başarısız');
             return true;
         } catch (error) {
@@ -559,32 +620,107 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ==========================================
-    // 4. TAKVİM VE ARAYÜZ
+    // 4. PERSONEL YÖNETİMİ ARAYÜZÜ
+    // ==========================================
+    document.getElementById('btn-open-personel-modal').addEventListener('click', () => {
+        personelStatusDiv.textContent = '';
+        personelYonetimListesiniDoldur();
+        personelModal.style.display = 'flex';
+    });
+
+    const personelYonetimListesiniDoldur = () => {
+        const ul = document.getElementById('personel-duzenle-listesi');
+        ul.innerHTML = '';
+        personelListesi.forEach(ad => {
+            const li = document.createElement('li');
+            li.className = 'personel-list-item';
+            li.innerHTML = `<span>${ad}</span> <button class="btn-personel-sil" data-isim="${ad}">Sil</button>`;
+            ul.appendChild(li);
+        });
+
+        // Silme butonlarına olay ekle
+        document.querySelectorAll('.btn-personel-sil').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const isim = e.target.getAttribute('data-isim');
+                if(confirm(`${isim} isimli personeli kalıcı olarak silmek istiyor musunuz?`)) {
+                    personelStatusDiv.textContent = 'Siliniyor...';
+                    personelStatusDiv.style.color = 'var(--primary-color)';
+                    
+                    personelListesi = personelListesi.filter(p => p !== isim);
+                    const basarili = await personelleriKaydetAPI(`${isim} personellerden silindi`);
+                    
+                    if(basarili) {
+                        personelStatusDiv.textContent = 'Personel silindi.';
+                        personelStatusDiv.style.color = 'var(--success-color)';
+                        personelSelectGuncelle();
+                        personelYonetimListesiniDoldur();
+                    } else {
+                        personelStatusDiv.textContent = 'Hata oluştu!';
+                        personelStatusDiv.style.color = 'var(--danger-color)';
+                    }
+                }
+            });
+        });
+    };
+
+    document.getElementById('btn-personel-ekle').addEventListener('click', async () => {
+        const input = document.getElementById('yeni-personel-adi');
+        let isim = input.value.trim().toLocaleUpperCase('tr-TR');
+        
+        if(!isim) return;
+        if(personelListesi.includes(isim)) {
+            personelStatusDiv.textContent = 'Bu isim zaten listede var!';
+            personelStatusDiv.style.color = 'var(--danger-color)';
+            return;
+        }
+
+        personelStatusDiv.textContent = 'Ekleniyor...';
+        personelStatusDiv.style.color = 'var(--primary-color)';
+
+        personelListesi.push(isim);
+        personelListesi.sort((a, b) => a.localeCompare(b, 'tr')); // Alfabetik sıraya geri sok
+
+        const basarili = await personelleriKaydetAPI(`${isim} listeye eklendi`);
+        
+        if(basarili) {
+            input.value = '';
+            personelStatusDiv.textContent = 'Yeni personel eklendi!';
+            personelStatusDiv.style.color = 'var(--success-color)';
+            personelSelectGuncelle();
+            personelYonetimListesiniDoldur();
+        } else {
+            // Hata olursa ekleneni geri al
+            personelListesi = personelListesi.filter(p => p !== isim);
+            personelStatusDiv.textContent = 'Kayıt sırasında hata oluştu!';
+            personelStatusDiv.style.color = 'var(--danger-color)';
+        }
+    });
+
+    document.getElementById('close-personel-modal').onclick = () => personelModal.style.display = 'none';
+
+    // ==========================================
+    // 5. TAKVİM VE ARAYÜZ
     // ==========================================
     const renderCalendar = () => {
         calendarBody.innerHTML = '';
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
         
-        // Ay başlığı
         const ayIsimleri = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
         currentMonthYearEl.textContent = `${ayIsimleri[month]} ${year}`;
 
         const firstDay = new Date(year, month, 1);
         const lastDay = new Date(year, month + 1, 0);
         
-        // Pazartesi'den başlatma (0=Pazartesi, 6=Pazar mantığına çevir)
         let startDay = firstDay.getDay() - 1;
         if (startDay === -1) startDay = 6;
 
-        // Boş kutular
         for(let i=0; i<startDay; i++) {
             const div = document.createElement('div');
             div.className = 'day-cell other-month';
             calendarBody.appendChild(div);
         }
 
-        // Günler
         for(let d=1; d<=lastDay.getDate(); d++) {
             const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             const cell = document.createElement('div');
@@ -595,31 +731,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 cell.className += ' today';
             }
 
-            // Tarih numarası
             const numDiv = document.createElement('div');
             numDiv.className = 'day-number';
             numDiv.textContent = d;
             cell.appendChild(numDiv);
 
-            // İzinleri Bul ve Ekle
             const gununIzinleri = izinKayitlari.filter(i => i.tarih === dateStr);
             gununIzinleri.forEach(izin => {
                 const div = document.createElement('div');
                 div.textContent = `${izin.adSoyad.split(' ')[0]} - ${izin.izinTuru === 'Saatlik' ? izin.saatAraligi : (izin.izinTuru === 'Yıllık İzin' ? 'Yıllık' : 'Günlük')}`;
                 div.title = izin.neden || '';
                 
-                // Renk Sınıfı Ekleme
                 div.className = 'izin-entry';
                 if (izin.izinTuru === 'Yıllık İzin') div.classList.add('type-yillik');
                 else if (izin.izinTuru === 'Saatlik') div.classList.add('type-saatlik');
                 else div.classList.add('type-gunluk');
 
-                div.onclick = (e) => { e.stopPropagation(); openModal(dateStr, izin.id); };
+                div.onclick = (e) => { e.stopPropagation(); openIzinModal(dateStr, izin.id); };
                 cell.appendChild(div);
             });
 
-            // Hücreye tıklama (Yeni İzin)
-            cell.onclick = () => openModal(dateStr);
+            cell.onclick = () => openIzinModal(dateStr);
             calendarBody.appendChild(cell);
         }
         
@@ -649,7 +781,6 @@ document.addEventListener('DOMContentLoaded', () => {
             li.style.borderBottom = '1px solid #eee';
             li.style.padding = '8px 0';
             
-            // Tarih formatla
             const tarihTr = new Date(izin.tarih).toLocaleDateString('tr-TR');
             
             let detay = '';
@@ -664,15 +795,14 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ==========================================
-    // 5. MODAL VE FORM İŞLEMLERİ
+    // 6. MODAL VE FORM İŞLEMLERİ (İZİN)
     // ==========================================
-    const openModal = (dateStr, id = null) => {
+    const openIzinModal = (dateStr, id = null) => {
         izinForm.reset();
         statusDiv.textContent = '';
         statusDiv.className = '';
         document.getElementById('izin-id').value = id || '';
         
-        // Varsayılan görünüm
         tekTarihWrapper.classList.remove('hidden');
         tarihAraligiWrapper.classList.add('hidden');
         saatlikAlan.classList.add('hidden');
@@ -680,14 +810,13 @@ document.addEventListener('DOMContentLoaded', () => {
         deleteButton.style.display = id ? 'block' : 'none';
 
         if(id) {
-            // Düzenleme Modu
             const rec = izinKayitlari.find(r => r.id == id);
             if(!rec) return;
 
             personelSelect.value = rec.adSoyad;
             document.querySelector(`input[name="izinTuru"][value="${rec.izinTuru}"]`).checked = true;
             document.getElementById('izin-nedeni').value = rec.neden || '';
-            document.getElementById('izin-tarihi').value = rec.tarih; // Düzenlemede her zaman tek gün üzerinden gidiyoruz basitlik için
+            document.getElementById('izin-tarihi').value = rec.tarih; 
             
             if(rec.izinTuru === 'Saatlik') {
                 saatlikAlan.classList.remove('hidden');
@@ -695,24 +824,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('baslangic-saati').value = b ? b.trim() : '';
                 document.getElementById('bitis-saati').value = s ? s.trim() : '';
             }
-            // Not: Yıllık izin düzenlenirken de tekil gün olarak açılır, bu karmaşıklığı önler.
-            modalTitle.textContent = 'İzin Düzenle';
+            document.getElementById('modal-title').textContent = 'İzin Düzenle';
         } else {
-            // Yeni Kayıt Modu
             document.getElementById('izin-tarihi').value = dateStr;
-            document.getElementById('baslangic-tarihi').value = dateStr; // Yıllık izin başlangıcı için varsayılan
-            modalTitle.textContent = 'Yeni İzin Girişi';
+            document.getElementById('baslangic-tarihi').value = dateStr; 
+            document.getElementById('modal-title').textContent = 'Yeni İzin Girişi';
         }
         
-        updateFormView(); // Radyo buton durumuna göre alanları güncelle
-        modal.style.display = 'flex';
+        updateFormView(); 
+        izinModal.style.display = 'flex';
     };
 
     const updateFormView = () => {
         const tur = document.querySelector('input[name="izinTuru"]:checked').value;
         const id = document.getElementById('izin-id').value;
 
-        // Düzenleme modunda tarih aralığı özelliğini kapatıyoruz karmaşıklığı önlemek için
         if (id) {
             tarihAraligiWrapper.classList.add('hidden');
             tekTarihWrapper.classList.remove('hidden');
@@ -733,10 +859,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Radyo butonu değişimlerini dinle
     radioButtons.forEach(rb => rb.addEventListener('change', updateFormView));
 
-    // Kaydetme İşlemi
     izinForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         statusDiv.textContent = 'Kaydediliyor...';
@@ -751,7 +875,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let yeniKayitlar = [];
 
-        // Yıllık İzin (Toplu Giriş) ve Yeni Kayıt ise
         if (izinTuru === 'Yıllık İzin' && !id) {
             const baslangic = new Date(document.getElementById('baslangic-tarihi').value);
             const bitis = new Date(document.getElementById('bitis-tarihi').value);
@@ -761,10 +884,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Döngü ile günleri ekle
             for (let d = new Date(baslangic); d <= bitis; d.setDate(d.getDate() + 1)) {
                 yeniKayitlar.push({
-                    id: Date.now() + Math.random(), // Benzersiz ID
+                    id: Date.now() + Math.random(),
                     adSoyad,
                     izinTuru,
                     tarih: d.toISOString().split('T')[0],
@@ -773,7 +895,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
         } else {
-            // Tekil Giriş (Günlük, Saatlik veya Düzenleme)
             const tarih = document.getElementById('izin-tarihi').value;
             let saatAraligi = '';
             
@@ -794,45 +915,42 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // State Güncelleme
         if (id) {
-            // Düzenleme: Eskiyi sil, yeniyi koy (Tekil)
             izinKayitlari = izinKayitlari.filter(k => k.id != id);
             izinKayitlari.push(yeniKayitlar[0]);
         } else {
-            // Yeni Ekleme
             izinKayitlari.push(...yeniKayitlar);
         }
 
-        const success = await izinleriKaydet(id ? `Düzenleme: ${adSoyad}` : `Yeni Kayıt: ${adSoyad} (${yeniKayitlar.length} gün)`);
+        const success = await izinleriKaydetAPI(id ? `Düzenleme: ${adSoyad}` : `Yeni Kayıt: ${adSoyad}`);
         
         if (success) {
             statusDiv.textContent = 'Başarılı!';
             statusDiv.className = 'success';
             renderCalendar();
-            setTimeout(() => { modal.style.display = 'none'; }, 1000);
+            setTimeout(() => { izinModal.style.display = 'none'; }, 1000);
         }
     });
 
-    // Silme İşlemi
     deleteButton.addEventListener('click', async () => {
         const id = document.getElementById('izin-id').value;
         if (!confirm('Bu izni silmek istiyor musunuz?')) return;
         
         izinKayitlari = izinKayitlari.filter(k => k.id != id);
-        const success = await izinleriKaydet('İzin silindi');
+        const success = await izinleriKaydetAPI('İzin silindi');
         
         if(success) {
-            modal.style.display = 'none';
+            izinModal.style.display = 'none';
             renderCalendar();
         }
     });
 
-    // --- Modal Kapatma ---
-    document.querySelector('.close-button').onclick = () => modal.style.display = 'none';
-    window.onclick = (e) => { if(e.target == modal) modal.style.display = 'none'; };
+    document.getElementById('close-izin-modal').onclick = () => izinModal.style.display = 'none';
+    window.onclick = (e) => { 
+        if(e.target == izinModal) izinModal.style.display = 'none'; 
+        if(e.target == personelModal) personelModal.style.display = 'none';
+    };
     
-    // --- Ay Değiştirme Butonları ---
     document.getElementById('prev-month').onclick = () => { currentDate.setMonth(currentDate.getMonth()-1); renderCalendar(); };
     document.getElementById('next-month').onclick = () => { currentDate.setMonth(currentDate.getMonth()+1); renderCalendar(); };
 
