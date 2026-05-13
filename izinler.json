@@ -1560,14 +1560,6 @@
     "neden": "ARAZİ KONTROL"
   },
   {
-    "id": 1778585812488,
-    "adSoyad": "KEMAL KORKMAZ",
-    "izinTuru": "Saatlik",
-    "tarih": "2026-05-12",
-    "saatAraligi": "14:00 - 17:00",
-    "neden": "ARAZİ KONTROL"
-  },
-  {
     "id": 1778650750701,
     "adSoyad": "KEMAL KORKMAZ",
     "izinTuru": "Saatlik",
@@ -1581,6 +1573,14 @@
     "izinTuru": "Saatlik",
     "tarih": "2026-05-13",
     "saatAraligi": "08:40 - 10:40",
+    "neden": "ARAZİ KONTROL"
+  },
+  {
+    "id": 1778585812488,
+    "adSoyad": "KEMAL KORKMAZ",
+    "izinTuru": "Saatlik",
+    "tarih": "2026-05-12",
+    "saatAraligi": "14:00 - 16:00",
     "neden": "ARAZİ KONTROL"
   }
 ]
