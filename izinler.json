@@ -1766,5 +1766,21 @@
     "tarih": "2026-06-16",
     "saatAraligi": "10:15 - 12:00",
     "neden": "arazi kontrol"
+  },
+  {
+    "id": 1781617411755,
+    "adSoyad": "NURHAN ARSLAN",
+    "izinTuru": "Saatlik",
+    "tarih": "2026-06-16",
+    "saatAraligi": "15:00 - 17:00",
+    "neden": "arazi kontrol"
+  },
+  {
+    "id": 1781617422114,
+    "adSoyad": "NURHAN ARSLAN",
+    "izinTuru": "Saatlik",
+    "tarih": "2026-06-16",
+    "saatAraligi": "15:00 - 17:00",
+    "neden": "arazi kontrol"
   }
 ]
