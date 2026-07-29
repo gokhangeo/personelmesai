@@ -2070,5 +2070,13 @@
     "tarih": "2026-07-30",
     "saatAraligi": "08:00 - 10:00",
     "neden": "HASTANE"
+  },
+  {
+    "id": 1785321881808,
+    "adSoyad": "AHMET ÇELİK",
+    "izinTuru": "Saatlik",
+    "tarih": "2026-07-29",
+    "saatAraligi": "13:30 - 14:30",
+    "neden": "ARAZİ KONTROL"
   }
 ]
