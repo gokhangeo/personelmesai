@@ -2366,5 +2366,21 @@
     "tarih": "2026-09-04",
     "saatAraligi": "11:00 - 12:00",
     "neden": "ARAZİ KONTROL"
+  },
+  {
+    "id": 1788759602813,
+    "adSoyad": "NURETTİN KELEŞ",
+    "izinTuru": "Saatlik",
+    "tarih": "2026-09-07",
+    "saatAraligi": "08:00 - 10:00",
+    "neden": "HASTANE"
+  },
+  {
+    "id": 1788761270960,
+    "adSoyad": "NURETTİN KELEŞ",
+    "izinTuru": "Saatlik",
+    "tarih": "2026-09-07",
+    "saatAraligi": "08:00 - 10:00",
+    "neden": "HASTANE"
   }
 ]
