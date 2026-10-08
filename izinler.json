@@ -2654,5 +2654,13 @@
     "tarih": "2026-10-08",
     "saatAraligi": "08:00 - 09:00",
     "neden": "HASTANE"
+  },
+  {
+    "id": 1791455563742,
+    "adSoyad": "DUDU POYRAZ",
+    "izinTuru": "Saatlik",
+    "tarih": "2026-10-08",
+    "saatAraligi": "13:15 - 14:30",
+    "neden": "ARAZİ KONTROL"
   }
 ]
