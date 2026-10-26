@@ -70,5 +70,17 @@
     "yer": "",
     "aciklama": "",
     "tamamlandi": false
+  },
+  {
+    "id": "1793009814944",
+    "baslik": "MERA KOMİSYONU",
+    "kategori": "Görev",
+    "tarih": "2026-10-14",
+    "tumGun": false,
+    "baslangic": "10:00",
+    "bitis": "11:00",
+    "yer": "",
+    "aciklama": "",
+    "tamamlandi": false
   }
 ]
