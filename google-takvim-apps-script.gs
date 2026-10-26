@@ -6,7 +6,7 @@
  * Ayrıca 10 dakikada bir gorevler.json'u GitHub'dan okuyup yedek senkron yapar.
  */
 const ANAHTAR = 'vx4kixPt1Vqei8obeFZJapSo'; // index.html'deki GCAL_ANAHTAR ile aynı
-const GITHUB_DOSYA = 'https://api.github.com/repos/gokhangeo/personelmesai/contents/gorevler.json';
+const GITHUB_DOSYA = 'https://raw.githubusercontent.com/gokhangeo/personelmesai/main/gorevler.json';
 const ETIKET = 'mudurGorevId';
 
 const RENK = {
@@ -42,11 +42,12 @@ function doGet() {
 }
 
 function zamanliSenkron() {
-  const res = UrlFetchApp.fetch(GITHUB_DOSYA, { muteHttpExceptions: true, headers: { Accept: 'application/vnd.github.v3+json' } });
-  if (res.getResponseCode() === 404) return senkronize([]);
-  if (res.getResponseCode() !== 200) throw new Error('GitHub okunamadı: ' + res.getResponseCode());
-  const icerik = Utilities.newBlob(Utilities.base64Decode(JSON.parse(res.getContentText()).content.replace(/\n/g, ''))).getDataAsString('UTF-8');
-  return senkronize(JSON.parse(icerik));
+  // raw.githubusercontent kullanılır (api.github.com Google sunucularına 403/limit veriyor)
+  const res = UrlFetchApp.fetch(GITHUB_DOSYA + '?t=' + Date.now(), { muteHttpExceptions: true });
+  const kod = res.getResponseCode();
+  if (kod === 404) return senkronize([]);
+  if (kod !== 200) { Logger.log('GitHub okunamadı: ' + kod + ' (bir sonraki turda tekrar denenecek)'); return; }
+  return senkronize(JSON.parse(res.getContentText('UTF-8')));
 }
 
 function senkronize(gorevler) {
