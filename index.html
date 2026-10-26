@@ -245,6 +245,30 @@
             font-size: 0.85rem;
             color: #6c757d;
         }
+
+        /* ===== MÜDÜR AJANDASI ===== */
+        :root { --mudur-color: #6f42c1; }
+        .btn-mudur { background-color: var(--mudur-color); }
+        .btn-mudur:hover { background-color: #59339d; }
+        .mudur-header { background-color: var(--mudur-color) !important; }
+        .mudur-subbar { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; padding:10px 20px; background:#f3eefc; border-bottom:1px solid var(--border-color); font-size:0.9rem; }
+        .gorev-entry { font-size:0.75rem; padding:3px 5px; margin-top:3px; border-radius:3px; color:#fff; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; background:var(--mudur-color); }
+        .gorev-entry.kat-toplanti { background:#0d6efd; }
+        .gorev-entry.kat-saha { background:#198754; }
+        .gorev-entry.kat-diger { background:#6c757d; }
+        .gorev-entry.tamam { opacity:0.55; text-decoration:line-through; }
+        #gorev-form { display:flex; flex-direction:column; gap:12px; }
+        #gorev-form textarea { width:100%; padding:10px; border-radius:5px; border:1px solid #ccc; box-sizing:border-box; font-family:inherit; min-height:60px; }
+        .check-row { display:flex; align-items:center; gap:8px; font-weight:normal; }
+        .check-row input { width:auto; }
+        #gorev-save-button { background-color: var(--mudur-color); color:white; border:none; padding:12px; border-radius:5px; cursor:pointer; }
+        #gorev-delete-button { background-color: var(--danger-color); color:white; border:none; padding:12px; border-radius:5px; cursor:pointer; display:none; }
+        .gcal-durum { font-weight:600; }
+        .gcal-ok { color: var(--success-color); }
+        .gcal-err { color: var(--danger-color); }
+        .gcal-wait { color: #b8860b; }
+        .btn-small { background:var(--mudur-color); color:#fff; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:0.8rem; }
+        .btn-small.gri { background:var(--secondary-color); }
     </style>
 </head>
 <body>
@@ -270,6 +294,9 @@
         <div class="action-buttons">
             <button id="btn-open-personel-modal" class="btn-action btn-manage-personel">
                 👥 Personel Yönetimi
+            </button>
+            <button id="btn-goto-mudur" class="btn-action btn-mudur">
+                📋 Müdür Ajandası
             </button>
             <button id="btn-download-blank-plan" class="btn-action btn-download-plan">
                 📄 2026 Boş Yıllık İzin Çizelgesi İndir
@@ -310,6 +337,33 @@
         <div id="monthly-summary" style="padding: 20px;"></div>
     </div>
     
+    <!-- ===== MÜDÜR AJANDASI (Günlük Etkinlik / Görev) ===== -->
+    <div class="container" id="mudur-ajandasi">
+        <div class="calendar-header mudur-header">
+            <button id="mudur-prev-month">❮ Önceki Ay</button>
+            <h2 id="mudur-month-year" style="margin:0"></h2>
+            <button id="mudur-next-month">Sonraki Ay ❯</button>
+        </div>
+        <div class="mudur-subbar">
+            <div><b>Müdür Ajandası</b> – günlük etkinlik ve görevler. Bir güne tıklayarak ekleyin.</div>
+            <div>
+                Google Takvim (mersinkadastro33): <span id="gcal-durum" class="gcal-durum gcal-wait">kontrol ediliyor…</span>
+                <button type="button" id="btn-gcal-sync" class="btn-small">🔄 Şimdi Aktar</button>
+                <button type="button" id="btn-gcal-ayar" class="btn-small gri">⚙️ Bağlantı</button>
+            </div>
+        </div>
+        <div class="calendar-grid day-headers">
+            <div class="day-header">Pzt</div><div class="day-header">Sal</div><div class="day-header">Çar</div>
+            <div class="day-header">Per</div><div class="day-header">Cum</div><div class="day-header">Cmt</div><div class="day-header">Paz</div>
+        </div>
+        <div class="calendar-grid" id="mudur-calendar-body"></div>
+        <div class="summary-header">
+            <h3 style="color:var(--mudur-color)">Ayın Görev / Etkinlik Listesi</h3>
+            <div class="report-buttons"><button id="export-gorev-report" style="background:var(--mudur-color)">Aylık Görevler (Excel)</button></div>
+        </div>
+        <div id="mudur-summary" style="padding: 20px;"></div>
+    </div>
+
     <!-- Telif Hakkı -->
     <div class="copyright">
         © Gökhan ELGÜL tarafından tasarlanmıştır.
@@ -405,6 +459,70 @@
         </div>
         
         <div id="personel-status" style="margin-top: 10px; font-weight: bold; text-align: center;"></div>
+    </div>
+</div>
+
+<!-- Görev / Etkinlik Modalı -->
+<div id="gorev-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-button" id="close-gorev-modal">&times;</span>
+        <h3 id="gorev-modal-title" style="color:var(--mudur-color)">Yeni Görev / Etkinlik</h3>
+        <form id="gorev-form">
+            <input type="hidden" id="gorev-id">
+            <div>
+                <label for="gorev-baslik">Başlık:</label>
+                <input type="text" id="gorev-baslik" placeholder="Örn: Mera komisyonu toplantısı" required>
+            </div>
+            <div>
+                <label for="gorev-kategori">Tür:</label>
+                <select id="gorev-kategori">
+                    <option value="Görev">Görev</option>
+                    <option value="Toplantı">Toplantı</option>
+                    <option value="Saha / Keşif">Saha / Keşif</option>
+                    <option value="Diğer">Diğer</option>
+                </select>
+            </div>
+            <div>
+                <label for="gorev-tarih">Tarih:</label>
+                <input type="date" id="gorev-tarih" required>
+            </div>
+            <label class="check-row"><input type="checkbox" id="gorev-tumgun"> Tüm gün</label>
+            <div id="gorev-saat-alan">
+                <label>Saat Aralığı:</label>
+                <div class="date-range-group">
+                    <input type="time" id="gorev-baslangic" value="09:00">
+                    <input type="time" id="gorev-bitis" value="10:00">
+                </div>
+            </div>
+            <div>
+                <label for="gorev-yer">Yer (Opsiyonel):</label>
+                <input type="text" id="gorev-yer" placeholder="Örn: Silifke Kadastro">
+            </div>
+            <div>
+                <label for="gorev-aciklama">Açıklama (Opsiyonel):</label>
+                <textarea id="gorev-aciklama"></textarea>
+            </div>
+            <label class="check-row"><input type="checkbox" id="gorev-tamam"> Tamamlandı</label>
+            <div class="form-buttons">
+                <button type="submit" id="gorev-save-button">Kaydet</button>
+                <button type="button" id="gorev-delete-button">Sil</button>
+            </div>
+            <div id="gorev-status"></div>
+        </form>
+    </div>
+</div>
+
+<!-- Google Takvim Bağlantı Modalı -->
+<div id="gcal-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-button" id="close-gcal-modal">&times;</span>
+        <h3 style="color:var(--mudur-color)">Google Takvim Bağlantısı</h3>
+        <p style="font-size:0.9rem">mersinkadastro33@gmail.com hesabında kurulan Apps Script'in <b>Web uygulaması URL</b>'sini yapıştırın (…/exec ile biter). Bir kez girmeniz yeterli.</p>
+        <input type="url" id="gcal-url-input" placeholder="https://script.google.com/macros/s/.../exec">
+        <div class="form-buttons">
+            <button type="button" id="gcal-url-save" style="background:var(--mudur-color);color:#fff;border:none;padding:12px;border-radius:5px;cursor:pointer">Kaydet ve Test Et</button>
+        </div>
+        <div id="gcal-modal-status" style="margin-top:10px"></div>
     </div>
 </div>
 
@@ -518,6 +636,8 @@ document.addEventListener('DOMContentLoaded', () => {
         await personelleriYukleAPI(); 
         await izinleriYukleAPI();
         renderCalendar();
+        await gorevleriYukle();
+        renderMudurCalendar();
     };
 
     // --- PERSONEL VERİ İŞLEMLERİ ---
@@ -954,6 +1074,224 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('prev-month').onclick = () => { currentDate.setMonth(currentDate.getMonth()-1); renderCalendar(); };
     document.getElementById('next-month').onclick = () => { currentDate.setMonth(currentDate.getMonth()+1); renderCalendar(); };
 
+
+    // ==========================================
+    // 7. MÜDÜR AJANDASI (GÖREV / ETKİNLİK) + GOOGLE TAKVİM
+    // ==========================================
+    const GOREV_DOSYASI_YOLU = 'gorevler.json';
+    const AYAR_DOSYASI_YOLU = 'ayarlar.json';
+    const GCAL_ANAHTAR = 'vx4kixPt1Vqei8obeFZJapSo'; // Apps Script'teki ANAHTAR ile aynı olmalı
+    let gorevKayitlari = [];
+    let ayarlar = {};
+    let mudurDate = new Date();
+
+    const ghDosyaOku = async (yol, varsayilan) => {
+        const res = await githubApiCall(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${yol}?t=${Date.now()}`);
+        if (res.status === 404) return { veri: varsayilan, sha: null };
+        if (!res.ok) throw new Error('Okuma hatası ' + res.status);
+        const data = await res.json();
+        return { veri: JSON.parse(decodeURIComponent(escape(window.atob(data.content.replace(/\n/g,''))))), sha: data.sha };
+    };
+    const ghDosyaYaz = async (yol, veri, mesaj) => {
+        const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${yol}`;
+        let sha = null;
+        const chk = await githubApiCall(url + `?t=${Date.now()}`);
+        if (chk.ok) sha = (await chk.json()).sha;
+        const content = window.btoa(unescape(encodeURIComponent(JSON.stringify(veri, null, 2))));
+        const body = { message: mesaj, content };
+        if (sha) body.sha = sha;
+        const res = await githubApiCall(url, { method: 'PUT', body: JSON.stringify(body) });
+        return res.ok;
+    };
+
+    const gorevleriYukle = async () => {
+        try { gorevKayitlari = (await ghDosyaOku(GOREV_DOSYASI_YOLU, [])).veri; } catch(e) { console.error(e); gorevKayitlari = []; }
+        try { ayarlar = (await ghDosyaOku(AYAR_DOSYASI_YOLU, {})).veri || {}; } catch(e) { ayarlar = {}; }
+        gcalDurumYaz(ayarlar.gcalWebhook ? 'Bağlı (aktarım bekleniyor)' : 'Bağlantı kurulmadı', ayarlar.gcalWebhook ? 'wait' : 'err');
+    };
+
+    const gcalDurumYaz = (metin, tip) => {
+        const el = document.getElementById('gcal-durum');
+        el.textContent = metin;
+        el.className = 'gcal-durum gcal-' + tip;
+    };
+
+    // Google Takvim'e tüm görev listesini gönderir; script ekler/günceller/siler
+    const gcalAktar = async () => {
+        if (!ayarlar.gcalWebhook) { gcalDurumYaz('Bağlantı kurulmadı', 'err'); return false; }
+        gcalDurumYaz('Aktarılıyor…', 'wait');
+        try {
+            const res = await fetch(ayarlar.gcalWebhook, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ anahtar: GCAL_ANAHTAR, islem: 'senkron', gorevler: gorevKayitlari })
+            });
+            const sonuc = await res.json();
+            if (!sonuc.ok) throw new Error(sonuc.hata || 'bilinmeyen hata');
+            gcalDurumYaz(`Aktarıldı ✓ (${new Date().toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'})})`, 'ok');
+            return true;
+        } catch (e) {
+            console.error('Google Takvim aktarım hatası:', e);
+            gcalDurumYaz('Aktarılamadı – zamanlı senkron 10 dk içinde dener', 'err');
+            return false;
+        }
+    };
+
+    const renderMudurCalendar = () => {
+        const body = document.getElementById('mudur-calendar-body');
+        body.innerHTML = '';
+        const year = mudurDate.getFullYear(), month = mudurDate.getMonth();
+        const ayIsimleri = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
+        document.getElementById('mudur-month-year').textContent = `${ayIsimleri[month]} ${year}`;
+        let startDay = new Date(year, month, 1).getDay() - 1; if (startDay === -1) startDay = 6;
+        const lastDate = new Date(year, month + 1, 0).getDate();
+        for (let i=0;i<startDay;i++){ const d=document.createElement('div'); d.className='day-cell other-month'; body.appendChild(d); }
+        const today = new Date();
+        for (let d=1; d<=lastDate; d++) {
+            const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const cell = document.createElement('div');
+            cell.className = 'day-cell';
+            if (d===today.getDate() && month===today.getMonth() && year===today.getFullYear()) cell.className += ' today';
+            const num = document.createElement('div'); num.className='day-number'; num.textContent=d; cell.appendChild(num);
+            gorevKayitlari.filter(g => g.tarih === dateStr)
+                .sort((a,b) => (a.tumGun?'':a.baslangic||'').localeCompare(b.tumGun?'':b.baslangic||''))
+                .forEach(g => {
+                    const div = document.createElement('div');
+                    div.className = 'gorev-entry';
+                    if (g.kategori === 'Toplantı') div.classList.add('kat-toplanti');
+                    else if (g.kategori === 'Saha / Keşif') div.classList.add('kat-saha');
+                    else if (g.kategori === 'Diğer') div.classList.add('kat-diger');
+                    if (g.tamamlandi) div.classList.add('tamam');
+                    div.textContent = `${g.tumGun ? '' : (g.baslangic + ' ')}${g.baslik}`;
+                    div.title = [g.kategori, g.yer, g.aciklama].filter(Boolean).join(' • ');
+                    div.onclick = (e) => { e.stopPropagation(); openGorevModal(dateStr, g.id); };
+                    cell.appendChild(div);
+                });
+            cell.onclick = () => openGorevModal(dateStr);
+            body.appendChild(cell);
+        }
+        renderMudurSummary(year, month);
+    };
+
+    const htmlKac = (t) => String(t || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+    const renderMudurSummary = (year, month) => {
+        const div = document.getElementById('mudur-summary');
+        const liste = gorevKayitlari.filter(g => { const [y,m] = g.tarih.split('-').map(Number); return y===year && m-1===month; })
+            .sort((a,b) => (a.tarih + (a.tumGun?'00:00':a.baslangic)).localeCompare(b.tarih + (b.tumGun?'00:00':b.baslangic)));
+        if (!liste.length) { div.innerHTML = '<p style="text-align:center; color:#999">Bu ay kayıtlı görev/etkinlik yok.</p>'; return; }
+        div.innerHTML = '<ul style="list-style:none;padding:0;margin:0">' + liste.map(g => {
+            const [y,m,d] = g.tarih.split('-');
+            return `<li style="border-bottom:1px solid #eee;padding:8px 0;${g.tamamlandi?'opacity:.6':''}"><strong>${d}.${m}.${y}</strong> ${g.tumGun?'<span style="color:#6f42c1">[Tüm gün]</span>':`<span style="color:#6f42c1">[${g.baslangic} - ${g.bitis}]</span>`} <b>${htmlKac(g.baslik)}</b> <small>(${htmlKac(g.kategori)})</small>${g.tamamlandi?' ✔️':''}<br><small>${htmlKac([g.yer, g.aciklama].filter(Boolean).join(' • '))}</small></li>`;
+        }).join('') + '</ul>';
+    };
+
+    const gorevModal = document.getElementById('gorev-modal');
+    const gorevForm = document.getElementById('gorev-form');
+    const gorevStatus = document.getElementById('gorev-status');
+    const gorevTumGun = document.getElementById('gorev-tumgun');
+    const gorevSaatAlan = document.getElementById('gorev-saat-alan');
+    gorevTumGun.addEventListener('change', () => gorevSaatAlan.classList.toggle('hidden', gorevTumGun.checked));
+
+    const openGorevModal = (dateStr, id = null) => {
+        gorevForm.reset();
+        gorevStatus.textContent = '';
+        document.getElementById('gorev-id').value = id || '';
+        document.getElementById('gorev-delete-button').style.display = id ? 'block' : 'none';
+        document.getElementById('gorev-tarih').value = dateStr;
+        document.getElementById('gorev-baslangic').value = '09:00';
+        document.getElementById('gorev-bitis').value = '10:00';
+        document.getElementById('gorev-modal-title').textContent = id ? 'Görev / Etkinlik Düzenle' : 'Yeni Görev / Etkinlik';
+        if (id) {
+            const g = gorevKayitlari.find(x => String(x.id) === String(id));
+            if (g) {
+                document.getElementById('gorev-baslik').value = g.baslik || '';
+                document.getElementById('gorev-kategori').value = g.kategori || 'Görev';
+                document.getElementById('gorev-tarih').value = g.tarih;
+                gorevTumGun.checked = !!g.tumGun;
+                if (!g.tumGun) { document.getElementById('gorev-baslangic').value = g.baslangic; document.getElementById('gorev-bitis').value = g.bitis; }
+                document.getElementById('gorev-yer').value = g.yer || '';
+                document.getElementById('gorev-aciklama').value = g.aciklama || '';
+                document.getElementById('gorev-tamam').checked = !!g.tamamlandi;
+            }
+        }
+        gorevSaatAlan.classList.toggle('hidden', gorevTumGun.checked);
+        gorevModal.style.display = 'flex';
+    };
+
+    const gorevKaydetVeAktar = async (mesaj) => {
+        gorevStatus.textContent = 'Kaydediliyor…';
+        const ok = await ghDosyaYaz(GOREV_DOSYASI_YOLU, gorevKayitlari, mesaj);
+        if (!ok) { gorevStatus.textContent = 'Hata: kayıt yapılamadı!'; return false; }
+        renderMudurCalendar();
+        gorevStatus.textContent = 'Kaydedildi. Google Takvim\'e aktarılıyor…';
+        const g = await gcalAktar();
+        gorevStatus.textContent = g ? 'Kaydedildi ve Google Takvim\'e aktarıldı ✓' : 'Kaydedildi (Google Takvim aktarımı sonra denenecek).';
+        return true;
+    };
+
+    gorevForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('gorev-id').value;
+        const tumGun = gorevTumGun.checked;
+        const baslangic = document.getElementById('gorev-baslangic').value;
+        const bitis = document.getElementById('gorev-bitis').value;
+        if (!tumGun && (!baslangic || !bitis || bitis <= baslangic)) { gorevStatus.textContent = 'Geçerli bir saat aralığı giriniz!'; return; }
+        const kayit = {
+            id: id || String(Date.now()),
+            baslik: document.getElementById('gorev-baslik').value.trim(),
+            kategori: document.getElementById('gorev-kategori').value,
+            tarih: document.getElementById('gorev-tarih').value,
+            tumGun,
+            baslangic: tumGun ? '' : baslangic,
+            bitis: tumGun ? '' : bitis,
+            yer: document.getElementById('gorev-yer').value.trim(),
+            aciklama: document.getElementById('gorev-aciklama').value.trim(),
+            tamamlandi: document.getElementById('gorev-tamam').checked
+        };
+        if (!kayit.baslik || !kayit.tarih) { gorevStatus.textContent = 'Başlık ve tarih zorunlu!'; return; }
+        gorevKayitlari = gorevKayitlari.filter(g => String(g.id) !== String(kayit.id));
+        gorevKayitlari.push(kayit);
+        if (await gorevKaydetVeAktar((id ? 'Görev düzenlendi: ' : 'Yeni görev: ') + kayit.baslik)) setTimeout(() => gorevModal.style.display = 'none', 1200);
+    });
+
+    document.getElementById('gorev-delete-button').addEventListener('click', async () => {
+        const id = document.getElementById('gorev-id').value;
+        if (!confirm('Bu görevi/etkinliği silmek istiyor musunuz? Google Takvim\'den de kaldırılacak.')) return;
+        gorevKayitlari = gorevKayitlari.filter(g => String(g.id) !== String(id));
+        if (await gorevKaydetVeAktar('Görev silindi')) setTimeout(() => gorevModal.style.display = 'none', 1000);
+    });
+
+    document.getElementById('close-gorev-modal').onclick = () => gorevModal.style.display = 'none';
+    document.getElementById('mudur-prev-month').onclick = () => { mudurDate.setMonth(mudurDate.getMonth()-1); renderMudurCalendar(); };
+    document.getElementById('mudur-next-month').onclick = () => { mudurDate.setMonth(mudurDate.getMonth()+1); renderMudurCalendar(); };
+    document.getElementById('btn-goto-mudur').onclick = () => document.getElementById('mudur-ajandasi').scrollIntoView({ behavior: 'smooth' });
+    document.getElementById('btn-gcal-sync').onclick = () => gcalAktar();
+
+    const gcalModal = document.getElementById('gcal-modal');
+    document.getElementById('btn-gcal-ayar').onclick = () => {
+        document.getElementById('gcal-url-input').value = ayarlar.gcalWebhook || '';
+        document.getElementById('gcal-modal-status').textContent = '';
+        gcalModal.style.display = 'flex';
+    };
+    document.getElementById('close-gcal-modal').onclick = () => gcalModal.style.display = 'none';
+    document.getElementById('gcal-url-save').onclick = async () => {
+        const st = document.getElementById('gcal-modal-status');
+        const url = document.getElementById('gcal-url-input').value.trim();
+        if (!/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(url)) { st.textContent = 'URL …/exec ile biten bir Apps Script adresi olmalı.'; return; }
+        st.textContent = 'Kaydediliyor…';
+        ayarlar.gcalWebhook = url;
+        if (!(await ghDosyaYaz(AYAR_DOSYASI_YOLU, ayarlar, 'Google Takvim bağlantısı güncellendi'))) { st.textContent = 'Kayıt hatası!'; return; }
+        st.textContent = 'Test aktarımı yapılıyor…';
+        st.textContent = (await gcalAktar()) ? 'Bağlantı çalışıyor ✓' : 'Kaydedildi ama test başarısız. Script dağıtımını ve erişimi ("Herkes") kontrol edin.';
+    };
+
+    window.addEventListener('click', (e) => {
+        if (e.target == gorevModal) gorevModal.style.display = 'none';
+        if (e.target == gcalModal) gcalModal.style.display = 'none';
+    });
+
+
     // --- RAPOR BUTONLARI ---
     const exportExcel = (data, name) => {
         if(!data.length) { alert('Veri yok'); return; }
@@ -979,6 +1317,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const y = currentDate.getFullYear();
         const data = izinKayitlari.filter(i => new Date(i.tarih).getFullYear()===y);
         exportExcel(data, `Yillik_Rapor_${y}`);
+    };
+
+    document.getElementById('export-gorev-report').onclick = () => {
+        const y = mudurDate.getFullYear(), m = mudurDate.getMonth() + 1;
+        const data = gorevKayitlari.filter(g => { const [gy,gm] = g.tarih.split('-').map(Number); return gy===y && gm===m; })
+            .sort((a,b) => (a.tarih+(a.baslangic||'')).localeCompare(b.tarih+(b.baslangic||'')));
+        if (!data.length) { alert('Veri yok'); return; }
+        const ws = XLSX.utils.json_to_sheet(data.map(g => ({
+            'Tarih': g.tarih, 'Saat': g.tumGun ? 'Tüm gün' : `${g.baslangic} - ${g.bitis}`, 'Başlık': g.baslik,
+            'Tür': g.kategori, 'Yer': g.yer, 'Açıklama': g.aciklama, 'Durum': g.tamamlandi ? 'Tamamlandı' : 'Bekliyor'
+        })));
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Gorevler");
+        XLSX.writeFile(wb, `Mudur_Gorevleri_${y}_${m}.xlsx`);
     };
 });
 </script>
