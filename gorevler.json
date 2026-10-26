@@ -1,1 +1,14 @@
-[]
+[
+  {
+    "id": "1793003065441",
+    "baslik": "Mera Toplantısı",
+    "kategori": "Toplantı",
+    "tarih": "2026-10-26",
+    "tumGun": false,
+    "baslangic": "11:45",
+    "bitis": "12:15",
+    "yer": "",
+    "aciklama": "",
+    "tamamlandi": false
+  }
+]
