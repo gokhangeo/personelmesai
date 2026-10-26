@@ -58,5 +58,17 @@
     "yer": "",
     "aciklama": "",
     "tamamlandi": false
+  },
+  {
+    "id": "1793009685236",
+    "baslik": "THA OFİS",
+    "kategori": "Görev",
+    "tarih": "2026-10-12",
+    "tumGun": false,
+    "baslangic": "09:00",
+    "bitis": "10:00",
+    "yer": "",
+    "aciklama": "",
+    "tamamlandi": false
   }
 ]
