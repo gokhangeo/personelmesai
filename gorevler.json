@@ -142,5 +142,17 @@
     "yer": "",
     "aciklama": "",
     "tamamlandi": false
+  },
+  {
+    "id": "1793099745649",
+    "baslik": "TARSUS BİRİMİ",
+    "kategori": "Görev",
+    "tarih": "2026-10-27",
+    "tumGun": false,
+    "baslangic": "12:00",
+    "bitis": "15:00",
+    "yer": "",
+    "aciklama": "",
+    "tamamlandi": false
   }
 ]
