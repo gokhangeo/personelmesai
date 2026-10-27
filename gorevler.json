@@ -12,18 +12,6 @@
     "tamamlandi": false
   },
   {
-    "id": "1793003268733",
-    "baslik": "İL KOORDİNASYON",
-    "kategori": "Görev",
-    "tarih": "2026-10-01",
-    "tumGun": false,
-    "baslangic": "09:00",
-    "bitis": "10:00",
-    "yer": "",
-    "aciklama": "",
-    "tamamlandi": false
-  },
-  {
     "id": "1793009597283",
     "baslik": "THA OFİS",
     "kategori": "Görev",
@@ -136,6 +124,18 @@
     "baslik": "ERDEMLİ SİLİFKE",
     "kategori": "Görev",
     "tarih": "2026-10-22",
+    "tumGun": false,
+    "baslangic": "09:00",
+    "bitis": "10:00",
+    "yer": "",
+    "aciklama": "",
+    "tamamlandi": false
+  },
+  {
+    "id": "1793003268733",
+    "baslik": "İL KOORDİNASYON",
+    "kategori": "Toplantı",
+    "tarih": "2026-10-01",
     "tumGun": false,
     "baslangic": "09:00",
     "bitis": "10:00",
