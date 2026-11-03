@@ -166,5 +166,17 @@
     "yer": "",
     "aciklama": "",
     "tamamlandi": false
+  },
+  {
+    "id": "1793681613729",
+    "baslik": "ANAMUR",
+    "kategori": "Görev",
+    "tarih": "2026-11-03",
+    "tumGun": false,
+    "baslangic": "09:00",
+    "bitis": "10:00",
+    "yer": "",
+    "aciklama": "",
+    "tamamlandi": false
   }
 ]
