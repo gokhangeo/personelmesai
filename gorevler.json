@@ -252,18 +252,6 @@
     "tamamlandi": false
   },
   {
-    "id": "1795415159841",
-    "baslik": "VALİLİK DENETİM",
-    "kategori": "Görev",
-    "tarih": "2027-01-05",
-    "tumGun": false,
-    "baslangic": "14:00",
-    "bitis": "15:00",
-    "yer": "",
-    "aciklama": "",
-    "tamamlandi": false
-  },
-  {
     "id": "1795415250697",
     "baslik": "VALİLİK DENETİM",
     "kategori": "Görev",
@@ -271,6 +259,18 @@
     "tumGun": false,
     "baslangic": "14:30",
     "bitis": "15:30",
+    "yer": "",
+    "aciklama": "",
+    "tamamlandi": false
+  },
+  {
+    "id": "1795415159841",
+    "baslik": "VALİLİK DENETİM",
+    "kategori": "Görev",
+    "tarih": "2027-01-05",
+    "tumGun": false,
+    "baslangic": "14:30",
+    "bitis": "15:00",
     "yer": "",
     "aciklama": "",
     "tamamlandi": false
