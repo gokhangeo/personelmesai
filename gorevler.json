@@ -286,5 +286,17 @@
     "yer": "ZİRAİ KARANTİNA MÜDÜRLÜĞÜ",
     "aciklama": "",
     "tamamlandi": false
+  },
+  {
+    "id": "1795677627142",
+    "baslik": "SİLİFKE-ANAMUR",
+    "kategori": "Görev",
+    "tarih": "2026-11-26",
+    "tumGun": false,
+    "baslangic": "08:00",
+    "bitis": "17:00",
+    "yer": "",
+    "aciklama": "",
+    "tamamlandi": false
   }
 ]
